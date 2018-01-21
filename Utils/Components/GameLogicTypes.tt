@@ -1,0 +1,75 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="EnvDTE" #> 
+<#@ assembly name="EnvDTE80" #> 
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="EnvDTE" #>
+<#@ import namespace="EnvDTE80" #>
+<#@ output extension=".cs" #>
+<#
+    var dte = (this.Host as IServiceProvider).GetService(typeof(DTE)) as DTE;
+    var project = dte.Solution.FindProjectItem(this.Host.TemplateFile).ContainingProject;
+
+    var namespaceQueue = new Queue<CodeNamespace>();
+    foreach (CodeElement e in project.CodeModel.CodeElements)
+        if (e.Kind == vsCMElement.vsCMElementNamespace && e.FullName.StartsWith("Equinox"))
+            namespaceQueue.Enqueue((CodeNamespace) e);
+    
+    var typeQueue = new Queue<CodeElement>();
+    while (namespaceQueue.Count > 0) {
+        CodeNamespace vrm = namespaceQueue.Dequeue();
+        foreach (CodeElement c in vrm.Members)
+            if (c.Kind == vsCMElement.vsCMElementNamespace)
+                namespaceQueue.Enqueue((CodeNamespace) c);
+            else
+                typeQueue.Enqueue(c);
+    }
+
+    var baseComponentType = "VRage.Game.Components.MyGameLogicComponent";
+    var validTypes = new HashSet<string>();
+    while (typeQueue.Count > 0) {
+        var type = typeQueue.Dequeue();
+        if (type.Kind == vsCMElement.vsCMElementClass) {
+            var ctype = (CodeClass) type;
+            foreach (CodeElement m in ctype.Members) {
+                typeQueue.Enqueue(m);
+            }
+            if (ctype.IsAbstract) continue;
+            var valid = false;
+            var bases = new Queue<CodeType>();
+            bases.Enqueue((CodeType) ctype);
+            while (bases.Count > 0) {
+                var test = bases.Dequeue();
+                if (test.FullName.Equals(baseComponentType)) {
+                    valid = true;
+                    break;
+                }
+                foreach (CodeElement k in test.Bases) {
+                    if (k.IsCodeType) {
+                        bases.Enqueue((CodeType)k);
+                    }
+                }
+            }
+            if (valid)
+                validTypes.Add(type.FullName);
+        }
+    }
+#>
+
+using System.Xml.Serialization;
+using System.Collections.Generic;
+namespace Equinox.Utils.Components
+{
+    public class GameLogicTypes
+    {
+        public static readonly IReadOnlyList<string> Types = new[] {
+<#
+    foreach (var type in validTypes) {
+        WriteLine($"            typeof({type}).FullName, ");
+    }
+#>
+        };
+    }
+}

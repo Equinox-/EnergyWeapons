@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F009E19A-1227-46ED-B253-E820D9741C72}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Equinox</RootNamespace>
+    <AssemblyName>EnergyWeapons</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>EnergyWeapons.ruleset</CodeAnalysisRuleSet>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>6</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>EnergyWeapons.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Sandbox.Common">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Game">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Graphics">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Graphics.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceEngineers">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\SpaceEngineers.exe</HintPath>
+    </Reference>
+    <Reference Include="SpaceEngineers.Game">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\SpaceEngineers.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceEngineers.ObjectBuilders">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\SpaceEngineers.ObjectBuilders.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="VRage">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Ansel">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Ansel.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Audio">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Audio.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Game">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Input">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Input.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Library">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Math">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Math.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Native">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Native.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.NativeAftermath">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.NativeAftermath.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.OpenVRWrapper">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.OpenVRWrapper.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Render">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Render.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Render11">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Render11.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Scripting">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Scripting.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Steam">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Steam.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EnergyWeapons\Components\Beam\Connection.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\Logic\Component.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\Logic\Emitter.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\Logic\Lossy.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\NetworkComponent.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\NetworkDetectors.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\Segment.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\NetworkController.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\NetworkStorage.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\DummyData.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\DummyKey.cs" />
+    <Compile Include="EnergyWeapons\Definitions.cs" />
+    <Compile Include="EnergyWeapons\Components\AmmoGeneratorComponent.cs" />
+    <Compile Include="EnergyWeapons\Components\Direction\DirectionBarrelComponent.cs" />
+    <Compile Include="EnergyWeapons\Components\Direction\DirectionComponent.cs" />
+    <Compile Include="EnergyWeapons\Components\Thermal\IThermalPhysicsProvider.cs" />
+    <Compile Include="EnergyWeapons\Components\Thermal\ThermalPhysicsComponent.cs" />
+    <Compile Include="EnergyWeapons\Components\Thermal\ThermalPhysicsSlim.cs" />
+    <Compile Include="EnergyWeapons\Components\Weapon\LaserWeaponComponent.cs" />
+    <Compile Include="EnergyWeapons\Components\Weapon\WeaponComponent.cs" />
+    <Compile Include="EnergyWeapons\Definition\Beam\LossyComponent.cs" />
+    <Compile Include="EnergyWeapons\Definition\DefinitionSet.cs" />
+    <Compile Include="EnergyWeapons\Definition\Beam\Block.cs" />
+    <Compile Include="EnergyWeapons\Definition\Beam\Optics.cs" />
+    <Compile Include="EnergyWeapons\Definition\Beam\Emitter.cs" />
+    <Compile Include="EnergyWeapons\Definition\Beam\Path.cs" />
+    <Compile Include="EnergyWeapons\Definition\Beam\Component.cs" />
+    <Compile Include="EnergyWeapons\Definition\Beam\Weapon.cs" />
+    <Compile Include="EnergyWeapons\Definition\Weapon\EnergyWeaponDefinition.cs" />
+    <Compile Include="EnergyWeapons\Definition\DefinitionManager.cs" />
+    <Compile Include="EnergyWeapons\Definition\Weapon\LaserWeaponDefinition.cs" />
+    <Compile Include="EnergyWeapons\EnergyWeaponsCore.cs" />
+    <Compile Include="EnergyWeapons\LogLevels.cs" />
+    <Compile Include="Utils\Misc\CameraExtensions.cs" />
+    <Compile Include="Utils\Misc\CollectionExtensions.cs" />
+    <Compile Include="Utils\Misc\ColorExtensions.cs" />
+    <Compile Include="Utils\Misc\DummyPathRef.cs" />
+    <Compile Include="Utils\Misc\EntityExtensions.cs" />
+    <Compile Include="Utils\Misc\MathExtensions.cs" />
+    <Compile Include="Utils\Misc\ObjectPool.cs" />
+    <Compile Include="Utils\Misc\ParallelExtensions.cs" />
+    <Compile Include="Utils\Misc\RecursiveSubparts.cs" />
+    <Compile Include="Utils\Render\Icosphere.cs" />
+    <Compile Include="Utils\Misc\GridIntersection.cs" />
+    <Compile Include="Utils\Misc\CellEnumerator.cs" />
+    <Compile Include="EnergyWeapons\Misc\ICoreRefComponent.cs" />
+    <Compile Include="EnergyWeapons\Misc\IRenderableComponent.cs" />
+    <Compile Include="EnergyWeapons\Misc\RaycastShortcuts.cs" />
+    <Compile Include="Utils\Misc\VoxelExtensions.cs" />
+    <Compile Include="EnergyWeapons\Misc\WeaponShortcuts.cs" />
+    <Compile Include="EnergyWeapons\Physics\MaterialProperties.cs" />
+    <Compile Include="EnergyWeapons\Physics\MaterialPropertyDatabase.cs" />
+    <Compile Include="EnergyWeapons\Physics\PhysicalConstants.cs" />
+    <Compile Include="EnergyWeapons\Physics\ThermalPhysicsController.cs" />
+    <Compile Include="Utils\Components\ComponentDependency.cs" />
+    <Compile Include="Utils\Components\ComponentExtensions.cs" />
+    <Compile Include="Utils\Components\EntityComponentRegistry.cs" />
+    <Compile Include="Utils\Components\GameLogicTypes.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GameLogicTypes.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Utils\Logging\CustomLogger.cs" />
+    <Compile Include="Utils\Logging\ILogging.cs" />
+    <Compile Include="Utils\Logging\LoggerBase.cs" />
+    <Compile Include="Utils\Logging\LoggingProxy.cs" />
+    <Compile Include="Utils\PlayerCollection.cs" />
+    <Compile Include="Utils\Scheduler\UpdateScheduler.cs" />
+    <Compile Include="Utils\SessionType.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\..\SEWhitelistDiagnostic\SEWhitelistChecker\SEWhitelistChecker\bin\Debug\SEWhitelistChecker.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="EnergyWeapons.ruleset" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Utils\Components\GameLogicTypes.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GameLogicTypes.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
