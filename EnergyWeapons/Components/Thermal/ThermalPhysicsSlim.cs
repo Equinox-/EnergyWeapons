@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Physics;
+using Equinox.Utils.Components;
 using Sandbox.Definitions;
 using Sandbox.Game.Components;
 using Sandbox.Game.Entities;
@@ -17,7 +18,7 @@ using VRageMath;
 
 namespace Equinox.EnergyWeapons.Components.Thermal
 {
-    public class ThermalPhysicsSlim : IThermalPhysicsProvider
+    public class ThermalPhysicsSlim : IThermalPhysicsProvider, IDebugComponent
     {
         private const float TOLERANCE = 1e-5f;
         private static readonly MyStringHash _overheatingHash = MyStringHash.GetOrCompute("Overheating");
@@ -107,10 +108,7 @@ namespace Equinox.EnergyWeapons.Components.Thermal
         /// <summary>
         /// Does this slim thermal physics require incremental updates
         /// </summary>
-        public bool NeedsUpdate
-        {
-            get { return _radiateIntoSpaceConductivity >= TOLERANCE || _overheatDamageMultiplier > 0; }
-        }
+        public bool NeedsUpdate => _radiateIntoSpaceConductivity >= TOLERANCE || _overheatDamageMultiplier > 0;
 
         /// <summary>
         /// Raised when the temperature changes.  (old, new)
@@ -254,17 +252,14 @@ namespace Equinox.EnergyWeapons.Components.Thermal
             other.Temperature = c1 + (ot - c1) * exp;
         }
 
-        ThermalPhysicsSlim IThermalPhysicsProvider.Physics
-        {
-            get { return this; }
-        }
+        ThermalPhysicsSlim IThermalPhysicsProvider.Physics => this;
+
+        private TimeSpan? _lastUpdate;
 
         /// <summary>
         /// Updates this thermal physics entity.
         /// </summary>
         /// <param name="entity">Entity to apply damage to</param>
-        private TimeSpan? _lastUpdate;
-
         public void Update(IMyDestroyableObject entity = null)
         {
             if (!_lastUpdate.HasValue)
@@ -280,6 +275,11 @@ namespace Equinox.EnergyWeapons.Components.Thermal
             Update(dt, entity);
         }
 
+        /// <summary>
+        /// Updates this thermal physics entity with a time delta
+        /// </summary>
+        /// <param name="entity">Entity to apply damage to</param>
+        /// <param name="dt">Delta time, in seconds</param>
         public void Update(float dt, IMyDestroyableObject entity = null)
         {
             var slim = entity as IMySlimBlock;
@@ -336,6 +336,14 @@ namespace Equinox.EnergyWeapons.Components.Thermal
                         entity?.DoDamage(damageToDo, _overheatingHash, true);
                 }
             }
+        }
+
+        public void Debug(StringBuilder sb)
+        {
+            sb.Append("Temperature: ").Append(Temperature.ToString("F2")).AppendLine(" K");
+            if (RadiateIntoSpaceConductivity > 0)
+                sb.Append("Radiating ").Append(RadiateIntoSpaceConductivity.ToString("F2")).AppendLine("kW/K");
+            sb.Remove(sb.Length - 1, 1); // remove nl
         }
     }
 }

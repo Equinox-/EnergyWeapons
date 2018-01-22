@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Misc;
 using Equinox.EnergyWeapons.Physics;
+using Equinox.Utils.Components;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Interfaces;
@@ -13,61 +14,74 @@ using VRage.Utils;
 
 namespace Equinox.EnergyWeapons.Components.Thermal
 {
-    public class ThermalPhysicsComponent : MyGameLogicComponent, IThermalPhysicsProvider, ICoreRefComponent
+    public class ThermalPhysicsComponent : ComponentSceneCallback, IDebugComponent, IThermalPhysicsProvider
     {
         private const float TOLERANCE = 1e-5f;
         private static readonly MyStringHash _overheatingHash = MyStringHash.GetOrCompute("Overheating");
 
-        public override string ComponentTypeDebugString
-        {
-            get { return nameof(ThermalPhysicsComponent); }
-        }
 
-        private EnergyWeaponsCore _core;
+        private readonly EnergyWeaponsCore _core;
 
         public ThermalPhysicsSlim Physics { get; }
 
-        public ThermalPhysicsComponent()
-        {
-            Physics = new ThermalPhysicsSlim(MaterialPropertyDatabase.IronMaterial, 1, PhysicalConstants.TemperatureSpace);
-            Physics.NeedsUpdateChanged += OnNeedsUpdateChanged;
-        }
-
-        private void OnNeedsUpdateChanged(bool old, bool @new)
-        {
-            if (@new)
-                NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
-            else
-                NeedsUpdate &= ~MyEntityUpdateEnum.EACH_10TH_FRAME;
-        }
-
-        public override void OnAddedToContainer()
-        {
-            CheckProperties();
-        }
-
-        public void OnAddedToCore(EnergyWeaponsCore core)
+        public ThermalPhysicsComponent(EnergyWeaponsCore core)
         {
             _core = core;
-            CheckProperties();
+            Physics = new ThermalPhysicsSlim(MaterialPropertyDatabase.IronMaterial, 1,
+                PhysicalConstants.TemperatureSpace);
+            Physics.NeedsUpdateChanged += (old, @new) => NeedsUpdate = @new;
         }
 
-        public void OnBeforeRemovedFromCore()
+        private bool _needsUpdate;
+
+        private bool NeedsUpdate
         {
-            _core = null;
-            CheckProperties();
+            get { return _needsUpdate; }
+            set
+            {
+                _needsUpdate = value;
+                CheckScheduled();
+            }
         }
 
-        public override void UpdateAfterSimulation10()
+        private bool _scheduled;
+
+        private void CheckScheduled()
         {
-            Physics.Update(Entity as IMyDestroyableObject);
+            var required = _needsUpdate && Entity != null && Entity.InScene;
+
+            if (required && !_scheduled)
+                _core.Scheduler.RepeatingUpdate(UpdateAfterSimulation10, 10);
+            else if (_scheduled && !required)
+                _core.Scheduler.RemoveUpdate(UpdateAfterSimulation10);
+
+            _scheduled = required;
         }
+
+        public override void OnAddedToScene()
+        {
+            CheckProperties();
+            CheckScheduled();
+        }
+
+        public override void OnRemovedFromScene()
+        {
+            NeedsUpdate = false;
+            CheckScheduled();
+        }
+
 
         private void CheckProperties()
         {
             if (Entity == null || _core == null)
                 return;
             Physics.Init(_core.Materials, Entity);
+        }
+
+        private void UpdateAfterSimulation10(ulong ticks)
+        {
+            if (Entity != null && Entity.InScene)
+                Physics.Update(Entity as IMyDestroyableObject);
         }
 
 
@@ -81,6 +95,11 @@ namespace Equinox.EnergyWeapons.Components.Thermal
                 ? PhysicalConstants.TemperatureAtPoint(Entity.WorldMatrix.Translation)
                 : PhysicalConstants.TemperatureSpace;
             Physics.RadiateHeat(temp, thermalConductivity);
+        }
+
+        public void Debug(StringBuilder sb)
+        {
+            Physics.Debug(sb);
         }
     }
 }

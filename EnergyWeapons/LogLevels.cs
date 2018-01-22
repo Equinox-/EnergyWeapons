@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Components.Beam.Logic;
 using Equinox.EnergyWeapons.Physics;
 using Equinox.Utils.Logging;
+using Equinox.Utils.Scheduler;
 using VRage.Utils;
 
 
@@ -31,7 +32,6 @@ namespace Equinox.EnergyWeapons
         {
             _levels.Add("", MyLogSeverity.Warning);
             AddNamespace(typeof(EnergyWeaponsCore), MyLogSeverity.Info);
-            Add(typeof(Emitter), MyLogSeverity.Debug);
         }
 
         public static ILogging CreateProxy(this ILoggingBase logger, Type type)

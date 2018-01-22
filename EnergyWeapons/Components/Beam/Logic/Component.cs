@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Equinox.Utils.Components;
 using Equinox.Utils.Logging;
 using VRage.Game.ModAPI;
 
@@ -14,7 +15,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         void OnRemovedFromScene();
     }
 
-    public abstract class Component<T> : IComponent where T : Definition.Beam.Component
+    public abstract class Component<T> : IComponent, IDebugComponent where T : Definition.Beam.Component
     {
         protected readonly ILogging Log;
         protected readonly T Definition;
@@ -31,5 +32,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 
         public abstract void OnAddedToScene();
         public abstract void OnRemovedFromScene();
+
+        public abstract void Debug(StringBuilder sb);
     }
 }

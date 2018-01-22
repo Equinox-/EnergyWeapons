@@ -62,6 +62,7 @@ namespace Equinox.EnergyWeapons
                 DoInit();
             if (!_master)
                 return;
+            Logger.UpdateAfterSimulation();
             if (_ticksUntilStartup >= 0)
             {
                 if (_ticksUntilStartup == 0)
@@ -71,46 +72,57 @@ namespace Equinox.EnergyWeapons
                 }
 
                 _ticksUntilStartup--;
+                return;
             }
 
-            Scheduler.RunUpdate(1);
-
-            Logger.UpdateAfterSimulation();
-            Physics.Update();
-
-            if (!MyAPIGateway.Utilities.IsDedicated && MyAPIGateway.Input.IsNewKeyPressed(MyKeys.O))
+            try
             {
-                var caster = MyAPIGateway.Session.LocalHumanPlayer?.Character?.EquippedTool?.Components
-                    .Get<MyCasterComponent>();
-                IMySlimBlock block = caster?.HitBlock;
-                if (block != null)
+                Scheduler.RunUpdate(1);
+                Physics.Update();
+
+                if (!MyAPIGateway.Utilities.IsDedicated && MyAPIGateway.Input.IsNewKeyPressed(MyKeys.O))
                 {
-                    var tm = block?.FatBlock as IMyTerminalBlock;
-                    if (tm != null)
-                        msg.Append("Block ").AppendLine(tm.CustomName);
-                    else
-                        msg.Append("Slim ").AppendLine(block.Position.ToString());
-                    var phys = Physics.PhysicsFor(block, false);
-                    if (phys != null)
+                    var caster = MyAPIGateway.Session.LocalHumanPlayer?.Character?.EquippedTool?.Components
+                        .Get<MyCasterComponent>();
+                    IMySlimBlock block = caster?.HitBlock;
+                    if (block != null)
                     {
-                        msg.Append(phys.Temperature).AppendLine(" K");
-                    }
+                        var tm = block?.FatBlock as IMyTerminalBlock;
+                        if (tm != null)
+                            _msg.Append("Block ").AppendLine(tm.CustomName);
+                        else
+                            _msg.Append("Slim ").AppendLine(block.Position.ToString());
+                        var phys = Physics.PhysicsFor(block, false);
+                        if (phys != null && phys.DebugWithType(_msg))
+                            _msg.AppendLine();
 
-                    var component = block?.FatBlock?.Components.Get<NetworkComponent>();
-                    if (component != null)
-                    {
-                        msg.Append(" BeamNet: ").AppendLine(component.Dummies.Count.ToString());
-                        foreach (var c in component.Dummies.Select(x => x.Segment).Distinct())
-                            msg.AppendFormat("{0:X8} => {1:F2} kJ\n", c.GetHashCode(), c.CurrentEnergy);
-                    }
+                        if (block.FatBlock != null)
+                        {
+                            var k = new List<MyComponentBase>();
+                            foreach (var c in block.FatBlock.Components)
+                                k.Add(c);
+                            foreach (var c in k)
+                            {
+                                var component = c as IDebugComponent;
+                                if (component != null && !(component is ThermalPhysicsComponent) &&
+                                    component.DebugWithType(_msg))
+                                    _msg.AppendLine();
+                            }
+                        }
 
-                    MyAPIGateway.Utilities.ShowNotification(msg.ToString());
-                    msg.Clear();
+                        Logger.Info(_msg);
+                        MyAPIGateway.Utilities.ShowNotification(_msg.ToString());
+                        _msg.Clear();
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Logger.Error("Uncaught main thread error\n" + e.ToString());
             }
         }
 
-        private readonly StringBuilder msg = new StringBuilder();
+        private readonly StringBuilder _msg = new StringBuilder();
 
         private void DoInit()
         {
@@ -135,7 +147,7 @@ namespace Equinox.EnergyWeapons
                 (x) => x.OnBeforeRemovedFromCore());
             ComponentRegistry.RegisterWithList<IRenderableComponent>();
             ComponentRegistry.RegisterComponentFactory(MakeAmmoGenerator);
-            ComponentRegistry.RegisterComponentFactory(WeaponFactory<LaserWeaponComponent, LaserWeaponDefinition>);
+            ComponentRegistry.RegisterComponentFactory(LaserWeaponFactory);
             ComponentRegistry.RegisterComponentFactory((x) =>
             {
                 if (x.Components.Get<NetworkController>() != null) return null;
@@ -186,14 +198,13 @@ namespace Equinox.EnergyWeapons
             return !hasMaster;
         }
 
-        private MyEntityComponentBase WeaponFactory<TComp, TDef>(IMyEntity ent)
-            where TComp : WeaponComponent<TDef>, new() where TDef : EnergyWeaponDefinition
+        private MyEntityComponentBase LaserWeaponFactory(IMyEntity ent)
         {
             var def = Definitions.EnergyOf(ent);
-            if (def is TDef)
+            if (def is LaserWeaponDefinition)
             {
-                Logger.Info($"Creating {typeof(TComp).Name} for {ent}");
-                return new TComp();
+                Logger.Info($"Creating {typeof(LaserWeaponComponent).Name} for {ent}");
+                return new LaserWeaponComponent(this);
             }
             else
                 return null;
@@ -240,7 +251,7 @@ namespace Equinox.EnergyWeapons
             {
                 render.Draw();
                 if (MyAPIGateway.Input.IsKeyPress(MyKeys.OemOpenBrackets))
-                render.DebugDraw();
+                    render.DebugDraw();
             }
         }
     }

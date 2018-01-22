@@ -44,12 +44,13 @@ namespace Equinox.EnergyWeapons.Components.Weapon
         private readonly ComponentDependency<ThermalPhysicsComponent> _thermalPhysics;
         private new IMyUserControllableGun Entity => base.Entity as IMyUserControllableGun;
 
-        public LaserWeaponComponent()
+        public LaserWeaponComponent(EnergyWeaponsCore core) : base(core)
         {
             _directionComp =
                 new ComponentDependency<DirectionComponent>(this, DirectionBarrelComponent.CreateAuto);
             _thermalPhysics =
-                new ComponentDependency<ThermalPhysicsComponent>(this, (x) => new ThermalPhysicsComponent());
+                ComponentDependency<ThermalPhysicsComponent>.DependencyWithFactory(this, core,
+                    (ent, lcore) => new ThermalPhysicsComponent(lcore));
             _thermalPhysics.ValueChanged += ThermalPhysicsChanged;
             _resourceSinkComp = new ComponentDependency<MyResourceSinkComponent>(this);
             _resourceSinkComp.ValueChanged += ResourceSinkChanged;

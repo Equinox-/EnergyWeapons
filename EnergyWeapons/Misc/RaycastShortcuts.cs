@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Equinox.Utils.Logging;
+using Equinox.Utils.Misc;
 using Sandbox.Engine.Physics;
 using Sandbox.Engine.Utils;
 using Sandbox.Engine.Voxels;
@@ -46,7 +47,7 @@ namespace Equinox.EnergyWeapons.Misc
         {
             // Force is second so we still update the cache for forced
             if (!_raycastPrefetchCache.IsItemPresent(ray.GetHash(),
-                (int)MyAPIGateway.Session.ElapsedPlayTime.TotalSeconds) || force)
+                    (int) MyAPIGateway.Session.ElapsedPlayTime.TotalSeconds) || force)
             {
                 var voxelHits = _voxelCache.Get();
                 try
@@ -66,7 +67,6 @@ namespace Equinox.EnergyWeapons.Misc
                         _voxelCache.Return(voxelHits);
                 }
             }
-
         }
 
         /// <summary>
@@ -101,6 +101,23 @@ namespace Equinox.EnergyWeapons.Misc
             }
 
             return hasHit;
+        }
+
+        public static IMySlimBlock Block(this IHitInfo hit, Vector3 rayDirection)
+        {
+            if (hit == null)
+                return null;
+            var fat = hit.HitEntity as IMyCubeBlock;
+            if (fat != null)
+                return fat.SlimBlock;
+            var grid = hit.HitEntity as IMyCubeGrid;
+            if (grid == null)
+                return null;
+            var local = Vector3.Transform(hit.Position, grid.WorldMatrixNormalizedInv);
+            var test = grid.GetCubeBlock(Vector3I.Round(local / grid.GridSize));
+            if (test != null)
+                return test;
+            return grid.FirstBlock(hit.Position, hit.Position + grid.GridSize * 10 * rayDirection);
         }
     }
 }

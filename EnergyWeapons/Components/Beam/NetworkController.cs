@@ -81,11 +81,13 @@ namespace Equinox.EnergyWeapons.Components.Beam
 
         public void Update(ulong deltaTicks)
         {
+            if (MyAPIGateway.Input.IsKeyPress(MyKeys.OemCloseBrackets))
+                return;
             if (_updateTask.HasValue && !_updateTask.Value.IsComplete)
                 _updateTask.Value.Wait();
+            var dt = deltaTicks * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS;
             foreach (var k in _network.Segments)
-                k.Commit();
-
+                k.Commit(dt);
             _updateTask = MyAPIGateway.Parallel.ForNonBlocking(0, _network.Segments.Count, (i) =>
             {
                 if (i >= _network.Segments.Count)
@@ -120,18 +122,32 @@ namespace Equinox.EnergyWeapons.Components.Beam
 
         #region Render
 
+        public static float BeamWidth(float power)
+        {
+            // at half the max power the width is 70%
+            const float _keyMaxPower = 1e6f; // 1 GW
+            const float _keyMaxWidth = 1f; // 1 m
+
+            var powerFrac = MathHelper.Clamp(power / _keyMaxPower, 0f, _keyMaxWidth * _keyMaxWidth);
+            return (float) Math.Sqrt(powerFrac);
+        }
+
+        public static Vector4 BeamColor(Vector4 tint, float power)
+        {
+            tint.W = 1;
+            return tint;
+        }
+
         public void Draw()
         {
             for (var i = 0; i < _network.Segments.Count; i++)
             {
                 Segment segment = _network.Segments.GetInternalArray()[i];
-                if (segment == null)
+                if (segment == null || segment.OutputEma <= 0)
                     continue;
-                var c = segment.CurrentColor;
-                if (segment.CurrentEnergy <= 0)
-                    continue;
-                var powerFrac = MathHelper.Clamp(segment.CurrentEnergy / 1e6f, 0f, .01f);
-                var width = (float) Math.Sqrt(powerFrac);
+                var c = BeamColor(segment.CurrentColor, segment.OutputEma);
+                var width = BeamWidth(segment.OutputEma);
+
                 if (segment.Path.Count > 0)
                 {
                     Vector3D prev = segment.Path[0].Dummy.WorldMatrix.Translation;
@@ -141,25 +157,37 @@ namespace Equinox.EnergyWeapons.Components.Beam
                         var curr = segment.Path[j].Dummy.WorldMatrix.Translation;
                         var currView = MyAPIGateway.Session.Camera.IsInFrustum(ref curr);
                         if (prevView || currView)
-                            MySimpleObjectDraw.DrawLine(prev, curr, _laserMaterial, ref c, width);
+                            MySimpleObjectDraw.DrawLine(prev, curr, LaserMaterial, ref c, width);
                         prev = curr;
                         prevView = currView;
                     }
                 }
 
                 foreach (var conn in segment.Connections)
-                    if (conn.From.Segment == segment)
+                {
+                    var tsi = conn.To.Segment?.Path.Count ?? 0;
+                    var fsi = conn.From.Segment?.Path.Count ?? 0;
+                    var tci = conn.To.Segment?.Connections.Count ?? 0;
+                    var fci = conn.From.Segment?.Connections.Count ?? 0;
+                    // choose source segment by first which has more elements, then by which has fewer connections, then just choose from;
+                    Segment preferredSegment = conn.From.Segment;
+                    if (tsi != fsi)
+                        preferredSegment = tsi > fsi ? conn.To.Segment : conn.From.Segment;
+                    else if (tci != fci)
+                        preferredSegment = tci < fci ? conn.To.Segment : conn.From.Segment;
+                    if (segment == preferredSegment)
                     {
                         var a = conn.From.Dummy.WorldMatrix.Translation;
                         var b = conn.To.Dummy.WorldMatrix.Translation;
                         if (MyAPIGateway.Session.Camera.IsInFrustum(ref a) ||
                             MyAPIGateway.Session.Camera.IsInFrustum(ref b))
-                            MySimpleObjectDraw.DrawLine(a, b, _laserMaterial, ref c, width);
+                            MySimpleObjectDraw.DrawLine(a, b, LaserMaterial, ref c, width);
                     }
+                }
             }
         }
 
-        private static readonly MyStringId _laserMaterial = MyStringId.GetOrCompute("WeaponLaser");
+        public static readonly MyStringId LaserMaterial = MyStringId.GetOrCompute("WeaponLaser");
 
         #endregion
 
@@ -201,7 +229,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
                         segment.Path[j].Dummy.WorldMatrix.Translation, c, c, segment.Forwards, segment.Backwards);
 
                 foreach (var conn in segment.Connections)
-                    if (conn.From.Segment == _network.Segments[i])
+                    if (conn.From.Segment == segment)
                     {
                         var c2 = (Vector4) Utils.Misc.ColorExtensions.SeededColor(
                             _network.Segments.IndexOf(conn.To.Segment));
@@ -224,7 +252,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
                 Color c = (fromColor + toColor) / 2;
                 var box = new BoundingBoxD(Vector3D.One / -8, Vector3D.One / 8);
                 MySimpleObjectDraw.DrawTransparentBox(ref m, ref box, ref c, MySimpleObjectRasterizer.Wireframe, 0,
-                    0.01f, null, _laserMaterial);
+                    0.01f, null, LaserMaterial);
                 return;
             }
 
@@ -241,19 +269,19 @@ namespace Equinox.EnergyWeapons.Components.Beam
             var dt1 = from + Vector3D.Normalize(-dir - a) * len;
 
 
-            MySimpleObjectDraw.DrawLine(ds0, dt0, _laserMaterial, ref fromColor, 0.05f);
-            MySimpleObjectDraw.DrawLine(ds1, dt1, _laserMaterial, ref toColor, 0.05f);
+            MySimpleObjectDraw.DrawLine(ds0, dt0, LaserMaterial, ref fromColor, 0.05f);
+            MySimpleObjectDraw.DrawLine(ds1, dt1, LaserMaterial, ref toColor, 0.05f);
 
             if (forwards)
             {
-                MySimpleObjectDraw.DrawLine(to, ds0, _laserMaterial, ref toColor, 0.05f);
-                MySimpleObjectDraw.DrawLine(to, ds1, _laserMaterial, ref toColor, 0.05f);
+                MySimpleObjectDraw.DrawLine(to, ds0, LaserMaterial, ref toColor, 0.05f);
+                MySimpleObjectDraw.DrawLine(to, ds1, LaserMaterial, ref toColor, 0.05f);
             }
 
             if (backwards)
             {
-                MySimpleObjectDraw.DrawLine(from, dt0, _laserMaterial, ref fromColor, 0.05f);
-                MySimpleObjectDraw.DrawLine(from, dt1, _laserMaterial, ref fromColor, 0.05f);
+                MySimpleObjectDraw.DrawLine(from, dt0, LaserMaterial, ref fromColor, 0.05f);
+                MySimpleObjectDraw.DrawLine(from, dt1, LaserMaterial, ref fromColor, 0.05f);
             }
         }
 

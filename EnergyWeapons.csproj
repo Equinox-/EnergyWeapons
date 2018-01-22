@@ -111,6 +111,7 @@
     <Compile Include="EnergyWeapons\Components\Beam\Logic\Component.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\Logic\Emitter.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\Logic\Lossy.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\Logic\Weapon.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\NetworkComponent.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\NetworkDetectors.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\Segment.cs" />
@@ -140,6 +141,9 @@
     <Compile Include="EnergyWeapons\Definition\Weapon\LaserWeaponDefinition.cs" />
     <Compile Include="EnergyWeapons\EnergyWeaponsCore.cs" />
     <Compile Include="EnergyWeapons\LogLevels.cs" />
+    <Compile Include="EnergyWeapons\Settings.cs" />
+    <Compile Include="Utils\Components\ComponentSceneCallback.cs" />
+    <Compile Include="Utils\Components\IDebugComponent.cs" />
     <Compile Include="Utils\Misc\CameraExtensions.cs" />
     <Compile Include="Utils\Misc\CollectionExtensions.cs" />
     <Compile Include="Utils\Misc\ColorExtensions.cs" />

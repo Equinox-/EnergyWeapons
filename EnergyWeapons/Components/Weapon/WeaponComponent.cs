@@ -17,7 +17,7 @@ using VRage.Game.ObjectBuilders.Definitions;
 
 namespace Equinox.EnergyWeapons.Components.Weapon
 {
-    public abstract class WeaponComponent<TDef> : MyGameLogicComponent, ICoreRefComponent
+    public abstract class WeaponComponent<TDef> : MyGameLogicComponent
         where TDef : EnergyWeaponDefinition
     {
         public static readonly MyDefinitionId ElectricityId =
@@ -27,7 +27,7 @@ namespace Equinox.EnergyWeapons.Components.Weapon
 
         protected ILogging Logger { get; private set; }
 
-        protected EnergyWeaponsCore Core { get; private set; }
+        protected EnergyWeaponsCore Core { get; }
 
         protected TDef Definition { get; private set; }
 
@@ -41,18 +41,10 @@ namespace Equinox.EnergyWeapons.Components.Weapon
             CheckDef();
         }
 
-        public void OnAddedToCore(EnergyWeaponsCore core)
+        protected WeaponComponent(EnergyWeaponsCore core)
         {
             Core = core;
             Logger = core?.Logger.CreateProxy(GetType());
-            CheckDef();
-        }
-
-        public void OnBeforeRemovedFromCore()
-        {
-            Core = null;
-            Logger = null;
-            CheckDef();
         }
 
         private void CheckDef()

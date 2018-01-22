@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Equinox.Utils.Components;
 using Equinox.Utils.Logging;
 using Equinox.Utils.Misc;
 using VRage;
@@ -12,7 +13,7 @@ using VRageMath;
 
 namespace Equinox.EnergyWeapons.Components.Beam
 {
-    public class Segment
+    public class Segment : IDebugComponent
     {
         [Flags]
         private enum Direction
@@ -425,14 +426,33 @@ namespace Equinox.EnergyWeapons.Components.Beam
             data.Segment = null;
         }
 
+        /// <summary>
+        /// Current energy in kJ
+        /// </summary>
         public float CurrentEnergy { get; private set; }
+
+        /// <summary>
+        /// Current beam color
+        /// </summary>
         public Vector4 CurrentColor { get; private set; }
-        public float Throughput { get; private set; }
+
+        /// <summary>
+        /// Total output of energy in kW.
+        /// </summary>
+        public float Output { get; private set; }
+
+        /// <summary>
+        /// Total output of energy in kW, averaged with an exponential moving average.
+        /// </summary>
+        public float OutputEma { get; private set; }
+
+        public event Action<Segment> StateUpdated;
 
         private float _nextEnergy;
         private Vector4 _nextColor;
+        private float _nextTotalOutput;
 
-        private float _injectedEnergy;
+        private float _injectedEnergy, _drainedEnergy;
         private Vector4 _injectColorWeighted;
 
         /// <summary>
@@ -441,9 +461,8 @@ namespace Equinox.EnergyWeapons.Components.Beam
         public void Predict()
         {
             var nextEnergy = CurrentEnergy;
-            var nextColor = CurrentColor * CurrentEnergy;
+            var nextColorWeighted = CurrentColor * CurrentEnergy;
 
-            var imports = 0f;
             var exports = 0f;
 
             // ReSharper disable once ForCanBeConvertedToForeach to make this "thread safe"
@@ -461,21 +480,20 @@ namespace Equinox.EnergyWeapons.Components.Beam
                 else if (con.To.Segment == this && !con.Bidirectional)
                     dE = Math.Max(0, dE);
 
-                if (dE > 0)
-                    imports += dE;
-                else
+                if (dE < 0)
                     exports -= dE;
 
                 nextEnergy += dE;
-                nextColor += dE * con.Filter * (dE > 0 ? opponent.CurrentColor : CurrentColor);
+                nextColorWeighted += dE * con.Filter * (dE > 0 ? opponent.CurrentColor : CurrentColor);
             }
 
-            Throughput = Math.Max(imports, exports);
+            lock (this)
+            {
+                _nextTotalOutput += exports;
 
-            _nextEnergy = Math.Max(0, nextEnergy);
-            _nextColor = nextEnergy > 0
-                ? Vector4.Clamp(nextColor / nextEnergy, Vector4.Zero, Vector4.One)
-                : Vector4.Zero;
+                _nextEnergy = Math.Max(0, nextEnergy);
+                _nextColor = nextColorWeighted / Math.Max(ENERGY_EPS, nextEnergy);
+            }
         }
 
         /// <summary>
@@ -485,19 +503,58 @@ namespace Equinox.EnergyWeapons.Components.Beam
         /// <param name="color">color of energy</param>
         public void AddEnergy(float energy, Vector4 color)
         {
-            _injectedEnergy += energy;
-            _injectColorWeighted += energy * color;
+            lock (this)
+            {
+                if (energy > 0)
+                    _injectedEnergy += energy;
+                else
+                    _drainedEnergy -= energy;
+                _injectColorWeighted += energy * color;
+            }
         }
 
         /// <summary>
         /// Commits the next tick information into the current tick information
         /// </summary>
-        public void Commit()
+        public void Commit(float dt)
         {
-            CurrentColor = _nextColor + _injectColorWeighted / Math.Max(0.001f, _injectedEnergy);
-            CurrentEnergy = _nextEnergy + _injectedEnergy;
-            _injectedEnergy = 0;
-            _injectColorWeighted = Vector4.Zero;
+            float nextOutput;
+
+            lock (this)
+            {
+                // Throughput is max(sum(all inputs), sum(all outputs)) / dt
+                _nextTotalOutput += _drainedEnergy;
+                nextOutput = _nextTotalOutput / dt;
+
+                _nextTotalOutput = 0;
+                var netInjection = _injectedEnergy - _drainedEnergy;
+
+                var d = Math.Max(ENERGY_EPS, netInjection + _nextEnergy);
+                _nextColor = (_nextColor * _nextEnergy + _injectColorWeighted * netInjection) / d;
+                _nextEnergy += netInjection;
+
+                _injectedEnergy = 0;
+                _drainedEnergy = 0;
+                _injectColorWeighted = Vector4.Zero;
+            }
+
+            Output = nextOutput;
+            OutputEma = OutputEma * 0.95f + Output * .05f;
+            CurrentColor = Vector4.Clamp(_nextColor, Vector4.Zero, Vector4.One);
+            CurrentEnergy = _nextEnergy;
+
+            StateUpdated?.Invoke(this);
+        }
+
+        private const float ENERGY_EPS = 1e-3f;
+
+        public void Debug(StringBuilder sb)
+        {
+            sb.Append("C=").Append(_path.Count);
+            sb.Append(" Power=").Append(CurrentEnergy.ToString("F2")).Append("kJ");
+            sb.Append(" Output=").Append(OutputEma.ToString("F2")).Append("kW");
+            sb.Append(" Color=").AppendFormat("[{0:F2} {1:F2} {2:F2} {3:F2}]", CurrentColor.X, CurrentColor.Y,
+                CurrentColor.Z, CurrentColor.W);
         }
     }
 }

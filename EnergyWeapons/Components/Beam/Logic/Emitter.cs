@@ -14,6 +14,11 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 {
     public class Emitter : Lossy<Definition.Beam.Emitter>
     {
+        /// <summary>
+        /// Auto-supply gives enough energy for this long.
+        /// </summary>
+        public const float EmitterTargetSupply = 10f;
+
         public Emitter(NetworkComponent block, Definition.Beam.Emitter definition) : base(block, definition)
         {
         }
@@ -39,61 +44,125 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             if (func != null)
                 func.EnabledChanged -= StateChanged;
 
+            NeedsUpdate = false;
+        }
 
-            if (_scheduled)
+        #region Update Logic
+
+        private bool _needsUpdate;
+
+        private bool NeedsUpdate
+        {
+            get { return _needsUpdate; }
+            set
             {
-                Update(10);
-                Network.Core.Scheduler.RemoveUpdate(Update);
+                _needsUpdate = value;
+                CheckScheduled();
             }
         }
 
+        private bool _scheduled;
 
-        private bool _scheduled = false;
+        private void CheckScheduled()
+        {
+            var required = _needsUpdate && Block != null && Block.InScene;
+
+            if (required && !_scheduled)
+                Network.Core.Scheduler.RepeatingUpdate(Update, UPDATE_INTERVAL);
+            else if (_scheduled && !required)
+                Network.Core.Scheduler.RemoveUpdate(Update);
+
+            _scheduled = required;
+        }
 
         private void StateChanged(IMyCubeBlock e)
         {
             var func = Block as IMyFunctionalBlock;
-            var on = Block.IsWorking && (func == null || func.Enabled);
-            if (on && !_scheduled)
-                Network.Core.Scheduler.RepeatingUpdate(Update, 10);
-            else if (!on && _scheduled)
-            {
-                Update(10);
-                Network.Core.Scheduler.RemoveUpdate(Update);
-            }
-
-            _scheduled = on;
+            NeedsUpdate = Block.IsWorking && (func == null || func.Enabled);
         }
+
+        #endregion
 
         public static readonly MyDefinitionId ElectricityId =
             new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Electricity");
 
+        private const int UPDATE_INTERVAL = 10;
+
+        private bool _wasOverheated;
+
+        private bool IsOverheated
+        {
+            get
+            {
+                if (!Definition.ThermalFuseMax.HasValue)
+                    return false;
+                var fuseTemp = _wasOverheated
+                    ? (Definition.ThermalFuseMin ?? Definition.ThermalFuseMax.Value)
+                    : Definition.ThermalFuseMax;
+                return _wasOverheated = (CurrentTemperature) > fuseTemp;
+            }
+        }
+
+        private float DesiredEmitterPower
+        {
+            get
+            {
+                var func = Block as IMyFunctionalBlock;
+                var on = Block.IsWorking && (func == null || func.Enabled);
+                if (!on || IsOverheated)
+                    return 0;
+
+                float maxPower = Definition.MaxPowerOutput;
+                if (!Definition.AutomaticTurnOff)
+                    return maxPower;
+
+                var turnOffThreshold = maxPower * EmitterTargetSupply;
+                // desiredOutput is enough to hit target in the next update.
+                var desiredOutput = (turnOffThreshold - (_dummy.Segment?.CurrentEnergy ?? turnOffThreshold)) /
+                                    (Efficiency(Definition.Efficiency) * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS *
+                                     UPDATE_INTERVAL);
+                return MathHelper.Clamp(desiredOutput, 0, maxPower);
+            }
+        }
+
+        private float EmitterPower
+        {
+            get
+            {
+                var desiredOutput = DesiredEmitterPower;
+                if (Block.ResourceSink != null)
+                {
+                    Block.ResourceSink.SetMaxRequiredInputByType(ElectricityId, desiredOutput / 1e3f); //kW to MW
+                    return Block.ResourceSink.CurrentInputByType(ElectricityId) * 1e3f;
+                }
+
+                return desiredOutput;
+            }
+        }
+
+
+        public override void Debug(StringBuilder sb)
+        {
+            base.Debug(sb);
+            sb.Append("Power=").Append(EmitterPower.ToString("F0")).Append("/")
+                .Append(DesiredEmitterPower.ToString("F0")).Append("  ");
+            sb.Append("Segment=").Append((_dummy.Segment?.GetHashCode() ?? 0).ToString("X8"));
+        }
+
         private void Update(ulong dticks)
         {
-            var func = Block as IMyFunctionalBlock;
-            var on = Block.IsWorking && (func == null || func.Enabled);
-            if (!on)
+            float power = EmitterPower;
+
+            if (_dummy.Segment == null || Math.Abs(power) < 1e-6f)
                 return;
-
-
+            float dt = MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS * dticks;
             float maxPower = Definition.MaxPowerOutput;
-            float power;
-            if (Block.ResourceSink != null)
-            {
-                Block.ResourceSink.SetMaxRequiredInputByType(ElectricityId, maxPower / 1e3f); //kW to MW
-                power = Block.ResourceSink.CurrentInputByType(ElectricityId) * 1e3f;
-            }
-            else
-            {
-                power = maxPower;
-            }
 
             var fractional = power / maxPower;
             var color = Vector4.Lerp(Definition.ColorMin, Definition.ColorMax, fractional);
 
-            var energy = power * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS * dticks;
-            var heatLoss = Math.Max(0, 1 - Definition.Efficiency) * energy;
-            _dummy.Segment?.AddEnergy(energy * Definition.Efficiency, color);
+            var energy = power * dt;
+            _dummy.Segment.AddEnergy(energy * Efficiency(Definition.Efficiency), color);
         }
     }
 }

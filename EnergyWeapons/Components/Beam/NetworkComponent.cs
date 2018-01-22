@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Components.Beam.Logic;
 using Equinox.EnergyWeapons.Definition.Beam;
+using Equinox.EnergyWeapons.Misc;
 using Equinox.Utils.Components;
 using Equinox.Utils.Logging;
 using VRage.Game.Components;
@@ -13,7 +14,7 @@ using VRageMath;
 
 namespace Equinox.EnergyWeapons.Components.Beam
 {
-    public class NetworkComponent : MyEntityComponentBase
+    public class NetworkComponent : MyEntityComponentBase, IDebugComponent, IRenderableComponent
     {
         public readonly EnergyWeaponsCore Core;
         public NetworkController Controller { get; private set; }
@@ -28,6 +29,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
         public override string ComponentTypeDebugString => nameof(NetworkComponent);
         private readonly List<DummyData> _dummies = new List<DummyData>();
         private readonly List<IComponent> _components = new List<IComponent>();
+        private readonly List<IRenderableComponent> _renderable = new List<IRenderableComponent>();
 
         public IReadOnlyList<DummyData> Dummies => _dummies;
 
@@ -64,7 +66,8 @@ namespace Equinox.EnergyWeapons.Components.Beam
                     {
                         for (var i = 0; i < cPath.Dummies.Length - 1; i++)
                         {
-                            Controller.Link(Entity, cPath.Dummies[i], Entity, cPath.Dummies[i + 1], cPath.Bidirectional, 1,
+                            Controller.Link(Entity, cPath.Dummies[i], Entity, cPath.Dummies[i + 1], cPath.Bidirectional,
+                                1,
                                 Vector4.One);
                         }
                     }
@@ -86,6 +89,14 @@ namespace Equinox.EnergyWeapons.Components.Beam
                         k.OnAddedToScene();
                         _components.Add(k);
                     }
+
+                    var cWeapon = c as Definition.Beam.Weapon;
+                    if (cWeapon != null)
+                    {
+                        var k = new Logic.Weapon(this, cWeapon);
+                        k.OnAddedToScene();
+                        _components.Add(k);
+                    }
                 }
 
                 foreach (var c in def.InputDetectors)
@@ -96,6 +107,9 @@ namespace Equinox.EnergyWeapons.Components.Beam
 
                 foreach (var c in def.BidirectionalDetectors)
                     Controller.AddDetector(Entity, c, true, true);
+
+                _renderable.Clear();
+                _renderable.AddRange(_components.OfType<IRenderableComponent>());
             }
             catch (Exception e)
             {
@@ -119,7 +133,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
                 var def = Core.Definitions.BeamOf(Entity);
                 foreach (var c in def)
                 foreach (var key in c.Inputs.Concat(c.Outputs).Concat(c.Internal))
-                        Controller.Remove(Entity, key);
+                    Controller.Remove(Entity, key);
             }
             catch (Exception e)
             {
@@ -129,6 +143,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
             }
 
             _dummies.Clear();
+            _renderable.Clear();
         }
 
         public override void OnBeforeRemovedFromContainer()
@@ -141,6 +156,50 @@ namespace Equinox.EnergyWeapons.Components.Beam
         {
             if (Entity.InScene)
                 OnAddedToScene();
+        }
+
+        public void Draw()
+        {
+            foreach (var x in _renderable)
+                x.Draw();
+        }
+
+        public void DebugDraw()
+        {
+            foreach (var x in _renderable)
+                x.DebugDraw();
+        }
+
+        public void Debug(StringBuilder sb)
+        {
+            const string indent = "  ";
+            const string childTag = "Children:\n";
+
+            sb.Append("Network: ").AppendLine(Dummies.Count.ToString());
+            foreach (var l in Dummies.Select(x => x.Segment).Where(x => x != null).Distinct())
+            {
+                sb.Append(indent).Append("Seg ").Append(l.GetHashCode().ToString("X8")).Append(" ");
+                l.Debug(sb);
+                sb.AppendLine();
+            }
+
+            var child = false;
+            sb.Append(childTag);
+            foreach (var x in _components.OfType<IDebugComponent>())
+            {
+                sb.Append(indent);
+                if (!x.DebugWithType(sb))
+                    sb.Remove(sb.Length - indent.Length, indent.Length);
+                else
+                {
+                    child = true;
+                    sb.AppendLine();
+                }
+            }
+
+            if (!child)
+                sb.Remove(sb.Length - childTag.Length, childTag.Length);
+            sb.Remove(sb.Length - 1, 1); // nl
         }
     }
 }

@@ -37,19 +37,24 @@ namespace Equinox.EnergyWeapons.Definition.Beam
         /// </summary>
         public float? ThermalFuseMax { get; set; } = 1500;
 
-        public override IEnumerable<string> Outputs
-        {
-            get { return new[] {Dummy}; }
-        }
+        /// <summary>
+        /// Will this emitter automatically turn off if the beam isn't loaded.
+        /// </summary>
+        public bool AutomaticTurnOff { get; set; } = true;
 
-        public override IEnumerable<string> Inputs
-        {
-            get { return Enumerable.Empty<string>(); }
-        }
+        /// <summary>
+        /// Efficiency of this emitter
+        /// </summary>
+        public float Efficiency { get; set; } = 1f;
 
-        public override IEnumerable<string> Internal
-        {
-            get { return Enumerable.Empty<string>(); }
-        }
+        public override IEnumerable<string> Outputs => new[] {Dummy};
+
+        public override IEnumerable<string> Inputs => Enumerable.Empty<string>();
+
+        public override IEnumerable<string> Internal => Enumerable.Empty<string>();
+
+
+        private LossyDummy[] _lossy;
+        public override IReadOnlyList<LossyDummy> LossyDummies => _lossy ?? (_lossy = new[] {new LossyDummy(Dummy, 1-Efficiency)});
     }
 }
