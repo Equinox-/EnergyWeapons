@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Equinox.Utils.Logging;
 using VRage.Game;
 using VRage.Game.ModAPI;
@@ -10,15 +6,15 @@ using VRage.ModAPI;
 using VRage.Utils;
 using VRageMath;
 
-namespace Equinox.EnergyWeapons.Components.Beam
+namespace Equinox.EnergyWeapons.Components.Network
 {
-    public class NetworkDetectors
+    public class NetworkDetectors<TSegmentType, TConnData> where TConnData:IConnectionData where TSegmentType : Segment<TSegmentType, TConnData>
     {
         private readonly EnergyWeaponsCore _core;
-        private readonly NetworkController _network;
+        private readonly NetworkController<TSegmentType, TConnData> _network;
         private readonly ILogging _log;
 
-        public NetworkDetectors(EnergyWeaponsCore core, NetworkController controller)
+        public NetworkDetectors(EnergyWeaponsCore core, NetworkController<TSegmentType, TConnData> controller)
         {
             _core = core;
             _network = controller;
@@ -96,9 +92,9 @@ namespace Equinox.EnergyWeapons.Components.Beam
                     var forward = k.Input && data.Output;
                     var reverse = k.Output && data.Input;
                     if (forward)
-                        _network.Link(data.Entity, data.Path, k.Entity, k.Path, reverse, 1, Vector4.One);
+                        _network.Link(data.Entity, data.Path, k.Entity, k.Path, reverse, _network.DetectorConnectionData);
                     else if (reverse)
-                        _network.Link(k.Entity, k.Path, data.Entity, data.Path, false, 1, Vector4.One);
+                        _network.Link(k.Entity, k.Path, data.Entity, data.Path, false, _network.DetectorConnectionData);
                 }
         }
 

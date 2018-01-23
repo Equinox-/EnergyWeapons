@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Linq;
 using Equinox.Utils.Misc;
 
-namespace Equinox.EnergyWeapons.Components.Beam
+namespace Equinox.EnergyWeapons.Components.Network
 {
-    public class DummyData
+    public class DummyData<TSegmentType, TConnData> where TConnData : IConnectionData
+        where TSegmentType : Segment<TSegmentType, TConnData>
     {
         public readonly DummyPathRef Dummy;
-        private Segment _segment;
+        private TSegmentType _segment;
 
-        public Segment Segment
+        public TSegmentType Segment
         {
             get { return _segment; }
             set
@@ -22,7 +22,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
             }
         }
 
-        public event Action<Segment, Segment> SegmentChanged;
+        public event Action<TSegmentType, TSegmentType> SegmentChanged;
 
         public DummyData(DummyPathRef dummy)
         {

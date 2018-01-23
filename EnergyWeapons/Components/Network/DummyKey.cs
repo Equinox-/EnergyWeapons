@@ -1,7 +1,7 @@
 ﻿using System;
 using VRage.ModAPI;
 
-namespace Equinox.EnergyWeapons.Components.Beam
+namespace Equinox.EnergyWeapons.Components.Network
 {
     internal struct DummyKey : IEquatable<DummyKey>
     {

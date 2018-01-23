@@ -11,6 +11,10 @@ using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
 using VRageMath;
 
+using DummyData =
+    Equinox.EnergyWeapons.Components.Network.DummyData<Equinox.EnergyWeapons.Components.Beam.Segment,
+        Equinox.EnergyWeapons.Components.Beam.BeamConnectionData>;
+
 namespace Equinox.EnergyWeapons.Components.Beam.Logic
 {
     public abstract class Lossy<T> : Component<T> where T : LossyComponent
@@ -46,7 +50,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             private void StateUpdate(Segment obj)
             {
                 _controller.ThermalPhysics.Value?.Physics.AddEnergy(
-                    obj.Output * MathHelper.Clamp(_controller.Efficiency(_data.HeatLoss), 0, 1));
+                    obj.Current.Output * MathHelper.Clamp(_controller.Efficiency(_data.HeatLoss), 0, 1));
             }
 
             public void Dispose()
@@ -107,6 +111,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
                 _upgradeCoolingKw =
                     Block.UpgradeValues.GetValueOrDefault(UpgradeValueEfficiency, UpgradeValueCoolingDefault);
             }
+
             CommitCoolingPower();
         }
 
@@ -117,7 +122,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             var phys = ThermalPhysics.Value?.Physics;
             if (phys == null)
                 return;
-            var @new = remove?0: _upgradeCoolingKw;
+            var @new = remove ? 0 : _upgradeCoolingKw;
             phys.RadiateIntoSpaceConductivity += (@new - _currCoolingPower);
             _currCoolingPower = @new;
         }

@@ -107,18 +107,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EnergyWeapons\Components\Beam\Connection.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\BeamConnectionData.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\BeamController.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\BeamSegmentData.cs" />
+    <Compile Include="EnergyWeapons\Components\Beam\Segment.cs" />
+    <Compile Include="EnergyWeapons\Components\Network\Connection.cs" />
+    <Compile Include="EnergyWeapons\Components\Network\IConnectionData.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\Logic\Component.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\Logic\Emitter.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\Logic\Lossy.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\Logic\Weapon.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\NetworkComponent.cs" />
-    <Compile Include="EnergyWeapons\Components\Beam\NetworkDetectors.cs" />
-    <Compile Include="EnergyWeapons\Components\Beam\Segment.cs" />
-    <Compile Include="EnergyWeapons\Components\Beam\NetworkController.cs" />
-    <Compile Include="EnergyWeapons\Components\Beam\NetworkStorage.cs" />
-    <Compile Include="EnergyWeapons\Components\Beam\DummyData.cs" />
-    <Compile Include="EnergyWeapons\Components\Beam\DummyKey.cs" />
+    <Compile Include="EnergyWeapons\Components\Network\NetworkDetectors.cs" />
+    <Compile Include="EnergyWeapons\Components\Network\Segment.cs" />
+    <Compile Include="EnergyWeapons\Components\Network\NetworkController.cs" />
+    <Compile Include="EnergyWeapons\Components\Network\DummyData.cs" />
+    <Compile Include="EnergyWeapons\Components\Network\DummyKey.cs" />
     <Compile Include="EnergyWeapons\Definitions.cs" />
     <Compile Include="EnergyWeapons\Components\AmmoGeneratorComponent.cs" />
     <Compile Include="EnergyWeapons\Components\Direction\DirectionBarrelComponent.cs" />
@@ -197,6 +201,7 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Components\Beam\" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -56,11 +56,25 @@ namespace Equinox.EnergyWeapons.Components
             var inv = user?.AmmoInventory;
             if (inv == null || _weaponAmmoMags == null)
                 return;
-            foreach (var mag in _weaponAmmoMags)
+            var grid = Entity as IMyCubeBlock;
+            if (grid == null || grid.IsWorking)
             {
-                if (inv.GetItemAmount(mag.GetObjectId(), mag.Flags) > 0)
-                    continue;
-                inv.AddItems(1, mag);
+                foreach (var mag in _weaponAmmoMags)
+                {
+                    if (inv.GetItemAmount(mag.GetObjectId(), mag.Flags) > 0)
+                        continue;
+                    inv.AddItems(1, mag);
+                }
+            }
+            else
+            {
+                foreach (var mag in _weaponAmmoMags)
+                {
+                    var amount = inv.GetItemAmount(mag.GetObjectId(), mag.Flags);
+                    if (amount > 0)
+                        inv.RemoveItemsOfType(amount, mag.GetObjectId());
+                }
+
             }
         }
 

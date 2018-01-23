@@ -103,14 +103,12 @@ namespace Equinox.EnergyWeapons
                             new Optics.OutgoingBeam()
                             {
                                 Dummy = "conn_211",
-                                Color = new Vector4(1, 0, 0, 1),
-                                PowerFactor = 0.5f
+                                Color = new Vector4(1, 0, 0, 1)
                             },
                             new Optics.OutgoingBeam()
                             {
                                 Dummy = "conn_121",
-                                Color = new Vector4(0, 1, 0, 1),
-                                PowerFactor = 0.5f
+                                Color = new Vector4(0, 1, 0, 1)
                             }
                         }
                     }

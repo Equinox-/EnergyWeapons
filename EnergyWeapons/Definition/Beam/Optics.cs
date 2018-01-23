@@ -19,10 +19,9 @@ namespace Equinox.EnergyWeapons.Definition.Beam
             public Vector4 Color { get; set; }= Vector4.One;
 
             /// <summary>
-            /// Multiplier applied to total input power to determine output power.
-            /// For realism the sum of all power factors should be <see cref="Component.Efficiency"/> so no power is lost (or gained)
+            /// Maximum throughput of this connection, or infinite
             /// </summary>
-            public float PowerFactor { get; set; }
+            public float MaxThroughput { get; set; } = float.PositiveInfinity;
         }
 
         /// <summary>

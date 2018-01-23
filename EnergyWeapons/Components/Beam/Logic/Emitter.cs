@@ -10,6 +10,9 @@ using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
+using DummyData =
+    Equinox.EnergyWeapons.Components.Network.DummyData<Equinox.EnergyWeapons.Components.Beam.Segment, Equinox.EnergyWeapons.Components.Beam.BeamConnectionData>;
+
 namespace Equinox.EnergyWeapons.Components.Beam.Logic
 {
     public class Emitter : Lossy<Definition.Beam.Emitter>
@@ -118,7 +121,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 
                 var turnOffThreshold = maxPower * EmitterTargetSupply;
                 // desiredOutput is enough to hit target in the next update.
-                var desiredOutput = (turnOffThreshold - (_dummy.Segment?.CurrentEnergy ?? turnOffThreshold)) /
+                var desiredOutput = (turnOffThreshold - (_dummy.Segment?.Current.Energy ?? turnOffThreshold)) /
                                     (Efficiency(Definition.Efficiency) * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS *
                                      UPDATE_INTERVAL);
                 return MathHelper.Clamp(desiredOutput, 0, maxPower);
@@ -162,7 +165,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             var color = Vector4.Lerp(Definition.ColorMin, Definition.ColorMax, fractional);
 
             var energy = power * dt;
-            _dummy.Segment.AddEnergy(energy * Efficiency(Definition.Efficiency), color);
+            _dummy.Segment.Inject(energy * Efficiency(Definition.Efficiency), color);
         }
     }
 }

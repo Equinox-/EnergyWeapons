@@ -12,12 +12,16 @@ using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRageMath;
 
+using DummyData =
+    Equinox.EnergyWeapons.Components.Network.DummyData<Equinox.EnergyWeapons.Components.Beam.Segment,
+        Equinox.EnergyWeapons.Components.Beam.BeamConnectionData>;
+
 namespace Equinox.EnergyWeapons.Components.Beam
 {
     public class NetworkComponent : MyEntityComponentBase, IDebugComponent, IRenderableComponent
     {
         public readonly EnergyWeaponsCore Core;
-        public NetworkController Controller { get; private set; }
+        public BeamController Controller { get; private set; }
         private readonly ILogging _log;
 
         public NetworkComponent(EnergyWeaponsCore core)
@@ -42,9 +46,9 @@ namespace Equinox.EnergyWeapons.Components.Beam
                 return;
             }
 
-            Controller = grid.Components.Get<NetworkController>();
+            Controller = grid.Components.Get<BeamController>();
             if (Controller == null)
-                grid.Components.Add(Controller = new NetworkController(Core));
+                grid.Components.Add(Controller = new BeamController(Core));
 
             _dummies.Clear();
             _components.Clear();
@@ -67,8 +71,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
                         for (var i = 0; i < cPath.Dummies.Length - 1; i++)
                         {
                             Controller.Link(Entity, cPath.Dummies[i], Entity, cPath.Dummies[i + 1], cPath.Bidirectional,
-                                1,
-                                Vector4.One);
+                                new BeamConnectionData(Vector4.One));
                         }
                     }
 
@@ -76,10 +79,11 @@ namespace Equinox.EnergyWeapons.Components.Beam
                     if (cOptics != null)
                     {
                         foreach (var k in cOptics.IncomingBeams)
-                            Controller.Link(Entity, k, Entity, cOptics.IntersectionPoint, false, 1, Vector4.One);
+                            Controller.Link(Entity, k, Entity, cOptics.IntersectionPoint, false,
+                                new BeamConnectionData(Vector4.One));
                         foreach (var k in cOptics.OutgoingBeams)
-                            Controller.Link(Entity, cOptics.IntersectionPoint, Entity, k.Dummy, false, k.PowerFactor,
-                                k.Color);
+                            Controller.Link(Entity, cOptics.IntersectionPoint, Entity, k.Dummy, false,
+                                new BeamConnectionData(k.Color, k.MaxThroughput));
                     }
 
                     var cEmitter = c as Definition.Beam.Emitter;

@@ -150,12 +150,6 @@ namespace Equinox.EnergyWeapons
             ComponentRegistry.RegisterComponentFactory(LaserWeaponFactory);
             ComponentRegistry.RegisterComponentFactory((x) =>
             {
-                if (x.Components.Get<NetworkController>() != null) return null;
-                if (x is IMyCubeGrid) return new NetworkController(this);
-                return null;
-            });
-            ComponentRegistry.RegisterComponentFactory((x) =>
-            {
                 var def = Definitions.BeamOf(x);
                 if (def != null)
                     return new NetworkComponent(this);

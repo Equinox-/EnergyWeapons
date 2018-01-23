@@ -16,11 +16,15 @@ using VRage.ModAPI;
 using VRage.Voxels;
 using VRageMath;
 
+using DummyData =
+    Equinox.EnergyWeapons.Components.Network.DummyData<Equinox.EnergyWeapons.Components.Beam.Segment,
+        Equinox.EnergyWeapons.Components.Beam.BeamConnectionData>;
+
 namespace Equinox.EnergyWeapons.Components.Beam.Logic
 {
     public class Weapon : Lossy<Definition.Beam.Weapon>, IRenderableComponent
     {
-        private static readonly TimeSpan _shootDebounceTime = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan _shootDebounceTime = TimeSpan.FromMilliseconds(10);
 
         public Weapon(NetworkComponent block, Definition.Beam.Weapon definition) : base(block, definition)
         {
@@ -53,7 +57,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             sb.Append("BeamColor=").AppendFormat("[{0:F2} {1:F2} {2:F2} {3:F2}] ", _beamColor.X, _beamColor.Y,
                 _beamColor.Z, _beamColor.W);
             sb.Append("BeamThickness=")
-                .Append(NetworkController.BeamWidth(_energyThroughput)
+                .Append(BeamController.BeamWidth(_energyThroughput)
                     .ToString("F2")).Append("m ");
             sb.Append("Distance=")
                 .Append(((_raycastResult?.Fraction ?? float.PositiveInfinity) * Definition.MaxLazeDistance).ToString("F1")).Append(" ");
@@ -135,9 +139,9 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
                 return;
             }
 
-            float energyToAdd = _dummy.Segment.CurrentEnergy / 20f;
+            float energyToAdd = _dummy.Segment.Current.Energy / 20f;
             _energyThroughput = energyToAdd / dt;
-            _dummy.Segment.AddEnergy(-energyToAdd, _beamColor = _dummy.Segment.CurrentColor);
+            _dummy.Segment.Inject(-energyToAdd, _beamColor = _dummy.Segment.Current.Color);
 
             float eff = Efficiency(Definition.Efficiency);
             IncrementTargetBurn(eff * energyToAdd);
@@ -175,8 +179,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         }
 
         #endregion
-
-
+        
         #region Target Destroy
 
         // kJ of energy to transfer into target
@@ -312,9 +315,9 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             {
                 var from = origin;
                 var to = origin + ((result?.Fraction ?? 1) * Definition.MaxLazeDistance + extraDist) * dir;
-                var thickness = NetworkController.BeamWidth(_energyThroughput);
-                var color = NetworkController.BeamColor(_beamColor, _energyThroughput);
-                MySimpleObjectDraw.DrawLine(from, to, NetworkController.LaserMaterial, ref color, thickness);
+                var thickness = BeamController.BeamWidth(_energyThroughput);
+                var color = BeamController.BeamColor(_beamColor, _energyThroughput);
+                MySimpleObjectDraw.DrawLine(from, to, BeamController.LaserMaterial, ref color, thickness);
             }
 
             if (Definition?.FxImpactName != null)
