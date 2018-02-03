@@ -28,11 +28,8 @@ namespace Equinox.Utils.Misc
             _path = path;
         }
 
-        private void Check()
+        private void Update()
         {
-            if (_cachedModel == _entity.Model && _cachedSubpartModel == _cachedSubpart?.Model)
-                return;
-
             _cachedModel = _entity.Model;
             _cachedSubpart = _entity;
             for (var i = 0; i < _path.Length - 1; i++)
@@ -65,13 +62,32 @@ namespace Equinox.Utils.Misc
                 EnergyWeaponsCore.LoggerStatic?.Warning(
                     $"Existing dummies: {string.Join(", ", tmp.Keys)}");
             }
+
+        }
+
+        private bool CheckUpdate()
+        {
+            if (_cachedModel == _entity.Model && _cachedSubpartModel == _cachedSubpart?.Model)
+                return true;
+            Update();
+            return false;
+        }
+
+        public Vector3D WorldPosition
+        {
+            get
+            {
+                CheckUpdate();
+                return Vector3D.Transform(_cachedDummyMatrix?.Translation ?? Vector3.Zero,
+                    _cachedSubpart?.WorldMatrix ?? _entity.WorldMatrix);
+            }
         }
 
         public MatrixD WorldMatrix
         {
             get
             {
-                Check();
+                CheckUpdate();
                 return (_cachedDummyMatrix ?? MatrixD.Identity) * (_cachedSubpart?.WorldMatrix ?? _entity.WorldMatrix);
             }
         }
@@ -80,7 +96,7 @@ namespace Equinox.Utils.Misc
         {
             get
             {
-                Check();
+                CheckUpdate();
                 return _cachedSubpart != null && _cachedDummyMatrix.HasValue;
             }
         }

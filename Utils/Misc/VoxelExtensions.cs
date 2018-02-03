@@ -1,5 +1,7 @@
 ﻿using System;
 using Sandbox.Definitions;
+using Sandbox.Engine.Voxels;
+using Sandbox.Game.Entities;
 using VRage.Game;
 using VRage.ModAPI;
 using VRage.Voxels;
@@ -9,7 +11,7 @@ namespace Equinox.Utils.Misc
 {
     public static class VoxelExtensions
     {
-        public static void ClampVoxelCoord(this VRage.ModAPI.IMyStorage self, ref Vector3I voxelCoord, int distance = 1)
+        public static void ClampVoxelCoord(this IMyStorage self, ref Vector3I voxelCoord, int distance = 1)
         {
             if (self == null)
                 return;
@@ -17,7 +19,7 @@ namespace Equinox.Utils.Misc
             Vector3I.Clamp(ref voxelCoord, ref Vector3I.Zero, ref max, out voxelCoord);
         }
 
-        public static MyDefinitionId? VoxelMaterialAt(this IMyVoxelBase voxel, Vector3D min, Vector3D grow,
+        public static MyDefinitionId? VoxelMaterialAt(this MyVoxelBase voxel, Vector3D min, Vector3D grow,
             ref MyStorageData cache)
         {
             if (cache == null)
@@ -60,7 +62,7 @@ namespace Equinox.Utils.Misc
             return null;
         }
 
-        public static float Laze(this IMyVoxelBase voxel, BoundingSphereD area, float amount, ref MyStorageData cache)
+        public static float Laze(this MyVoxelBase voxel, BoundingSphereD area, float amount, ref MyStorageData cache)
         {
             if (cache == null)
                 cache = new MyStorageData();
@@ -118,7 +120,7 @@ namespace Equinox.Utils.Misc
             return totalRemoved / 255f;
         }
 
-        private static void GetVoxelShapeDimensions(IMyVoxelBase voxelMap, BoundingBoxD shape, out Vector3I minCorner,
+        private static void GetVoxelShapeDimensions(MyVoxelBase voxelMap, BoundingBoxD shape, out Vector3I minCorner,
             out Vector3I maxCorner, out Vector3I numCells)
         {
             ComputeShapeBounds(voxelMap, ref shape, out minCorner, out maxCorner);
@@ -126,7 +128,7 @@ namespace Equinox.Utils.Misc
                 (maxCorner.Z - minCorner.Z) / 16);
         }
 
-        public static void ComputeShapeBounds(IMyVoxelBase voxelMap, ref BoundingBoxD shapeAabb,
+        public static void ComputeShapeBounds(MyVoxelBase voxelMap, ref BoundingBoxD shapeAabb,
             out Vector3I voxelMin, out Vector3I voxelMax)
         {
             var storageSize = voxelMap.Storage.Size;
@@ -142,18 +144,18 @@ namespace Equinox.Utils.Misc
             Vector3I.Clamp(ref voxelMax, ref Vector3I.Zero, ref storageSize, out voxelMax);
         }
 
-        public static Vector3D VoxelFloatToWorldCoord(IMyVoxelBase voxelMap, Vector3D voxelCoords)
+        public static Vector3D VoxelFloatToWorldCoord(MyVoxelBase voxelMap, Vector3D voxelCoords)
         {
-            Vector3D tmp = voxelCoords - (Vector3D) voxelMap.StorageMin;
-            MyVoxelCoordSystems.LocalPositionToWorldPosition(voxelMap.PositionLeftBottomCorner, ref tmp, out tmp);
-            return tmp;
+            Vector3 tmp = voxelCoords - (Vector3D) voxelMap.StorageMin;
+            Vector3D result;
+            MyVoxelCoordSystems.LocalPositionToWorldPosition(voxelMap.PositionLeftBottomCorner, ref tmp, out result);
+            return result;
         }
 
-        public static Vector3D WorldCoordToVoxelFloat(IMyVoxelBase voxelMap, Vector3D worldCoords)
+        public static Vector3D WorldCoordToVoxelFloat(MyVoxelBase voxelMap, Vector3D worldCoords)
         {
-            Vector3D tmp;
-            MyVoxelCoordSystems.WorldPositionToLocalPosition(voxelMap.PositionLeftBottomCorner, ref worldCoords,
-                out tmp);
+            Vector3 tmp;
+            MyVoxelCoordSystems.WorldPositionToLocalPosition(voxelMap.PositionLeftBottomCorner, ref worldCoords, out tmp);
             tmp += voxelMap.StorageMin;
             return Vector3D.Clamp(tmp, Vector3D.Zero, voxelMap.StorageMax);
         }

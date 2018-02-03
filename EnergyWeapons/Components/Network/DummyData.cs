@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Equinox.Utils.Misc;
 
 namespace Equinox.EnergyWeapons.Components.Network
@@ -28,5 +29,7 @@ namespace Equinox.EnergyWeapons.Components.Network
         {
             Dummy = dummy;
         }
+
+        public bool Endpoint => _segment != null && (_segment.Path.Last() == this || _segment.Path.First() == this);
     }
 }

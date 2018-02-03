@@ -71,9 +71,9 @@ namespace Equinox.EnergyWeapons.Components.Beam
             var dE = (opponent.Current.Energy - Current.Energy) / 2f;
             if (!float.IsPositiveInfinity(con.Data.MaxThroughput))
                 dE = Math.Sign(dE) * Math.Min(Math.Abs(dE), con.Data.MaxThroughput * dt);
-            if (con.From.Segment == this && !con.Bidirectional)
+            if (con.From.Segment == this && !con.Data.Bidirectional)
                 dE = Math.Min(0, dE);
-            else if (con.To.Segment == this && !con.Bidirectional)
+            else if (con.To.Segment == this && !con.Data.Bidirectional)
                 dE = Math.Max(0, dE);
 
             var dColor = dE * con.Data.Filter * (dE > 0 ? opponent.Current.Color : Current.Color);

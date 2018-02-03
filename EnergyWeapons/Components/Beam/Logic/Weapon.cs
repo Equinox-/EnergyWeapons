@@ -220,7 +220,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             var phys = block != null
                 ? Network.Core.Physics.PhysicsFor(block)
                 : Network.Core.Physics.PhysicsFor(entity);
-            var voxel = entity as IMyVoxelBase;
+            var voxel = entity as MyVoxelBase;
             if (phys != null)
             {
                 phys.AddEnergy(_lazeAccumulatedEnergy);

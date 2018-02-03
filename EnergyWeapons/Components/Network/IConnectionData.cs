@@ -3,5 +3,6 @@
     public interface IConnectionData
     {
         bool CanDissolve { get; }
+        bool Bidirectional { get; }
     }
 }

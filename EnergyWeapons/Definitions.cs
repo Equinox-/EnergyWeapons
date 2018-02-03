@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Equinox.EnergyWeapons.Definition;
 using Equinox.EnergyWeapons.Definition.Beam;
 using Equinox.EnergyWeapons.Definition.Weapon;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Common.ObjectBuilders.Definitions;
 using VRage.Game;
+using VRage.Game.Components;
 using VRageMath;
 
 namespace Equinox.EnergyWeapons
@@ -134,6 +136,22 @@ namespace Equinox.EnergyWeapons
                     {
                         Dummies = new[] {"conn_211", "conn_111", "conn_011"},
                         Bidirectional = false
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block()
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_Passage), "MA_BN_Tube0_Large"),
+                Components = new List<Component>()
+                {
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01", "beam_acceptor_02"
+                        },
+                        Bidirectional = true
                     }
                 }
             });

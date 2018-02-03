@@ -11,7 +11,6 @@ using Equinox.Utils.Logging;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRageMath;
-
 using DummyData =
     Equinox.EnergyWeapons.Components.Network.DummyData<Equinox.EnergyWeapons.Components.Beam.Segment,
         Equinox.EnergyWeapons.Components.Beam.BeamConnectionData>;
@@ -70,8 +69,8 @@ namespace Equinox.EnergyWeapons.Components.Beam
                     {
                         for (var i = 0; i < cPath.Dummies.Length - 1; i++)
                         {
-                            Controller.Link(Entity, cPath.Dummies[i], Entity, cPath.Dummies[i + 1], cPath.Bidirectional,
-                                new BeamConnectionData(Vector4.One));
+                            Controller.Link(Entity, cPath.Dummies[i], Entity, cPath.Dummies[i + 1],
+                                new BeamConnectionData(Vector4.One, float.PositiveInfinity, cPath.Bidirectional));
                         }
                     }
 
@@ -79,11 +78,11 @@ namespace Equinox.EnergyWeapons.Components.Beam
                     if (cOptics != null)
                     {
                         foreach (var k in cOptics.IncomingBeams)
-                            Controller.Link(Entity, k, Entity, cOptics.IntersectionPoint, false,
-                                new BeamConnectionData(Vector4.One));
+                            Controller.Link(Entity, k, Entity, cOptics.IntersectionPoint,
+                                new BeamConnectionData(Vector4.One, float.PositiveInfinity, false));
                         foreach (var k in cOptics.OutgoingBeams)
-                            Controller.Link(Entity, cOptics.IntersectionPoint, Entity, k.Dummy, false,
-                                new BeamConnectionData(k.Color, k.MaxThroughput));
+                            Controller.Link(Entity, cOptics.IntersectionPoint, Entity, k.Dummy,
+                                new BeamConnectionData(k.Color, k.MaxThroughput, false));
                     }
 
                     var cEmitter = c as Definition.Beam.Emitter;

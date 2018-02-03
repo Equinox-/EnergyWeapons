@@ -21,40 +21,17 @@ namespace Equinox.EnergyWeapons.Components.Beam
 
         public override string ComponentTypeDebugString => nameof(BeamController);
 
-        public override BeamConnectionData DetectorConnectionData => new BeamConnectionData(Vector4.One);
+        public override BeamConnectionData DetectorConnectionData(bool bidir)
+        {
+            return new BeamConnectionData(Vector4.One, float.PositiveInfinity, bidir);
+        }
+
         public override BeamConnectionData DissolveableConnectionData => new BeamConnectionData(Vector4.One);
 
         public override Segment AllocateSegment(bool bidirectional, params DummyData<Segment, BeamConnectionData>[] path)
         {
             return new Segment(this, bidirectional, path);
         }
-//
-//        public override void PredictionBegin(Segment segment, float dt, ref Segment.BeamSegmentData next)
-//        {
-//            // copies
-//            next = segment.Current;
-//        }
-//
-//        public override void PredictionAddConnection(Segment segment, float dt,
-//            Connection<Segment.BeamSegmentData, BeamConnectionData> con, ref Segment.BeamSegmentData next)
-//        {
-//            var opponent = con.From.Segment == segment ? con.To.Segment : con.From.Segment;
-//            if (opponent == segment)
-//                return;
-//            var dE = (opponent.Current.Energy - segment.Current.Energy) / 2f;
-//            if (!float.IsPositiveInfinity(con.Data.MaxThroughput))
-//                dE = Math.Sign(dE) * Math.Min(Math.Abs(dE), con.Data.MaxThroughput * dt);
-//            if (con.From.Segment == segment && !con.Bidirectional)
-//                dE = Math.Min(0, dE);
-//            else if (con.To.Segment == segment && !con.Bidirectional)
-//                dE = Math.Max(0, dE);
-//
-//            var dColor = dE * con.Data.Filter * (dE > 0 ? opponent.CurrentColor : segment.CurrentColor);
-//            next = new Segment.BeamSegmentData(next.Energy + dE, next.WeightedColor + dColor, next.Output + Math.Max(-dE, 0),
-//                0);
-//        }
-//
-
 
         #region Render
 
@@ -78,7 +55,6 @@ namespace Equinox.EnergyWeapons.Components.Beam
         {
             if (MyAPIGateway.Input.IsNewKeyPressed(MyKeys.OemQuotes))
                 base.DumpData();
-            ;
             for (var i = 0; i < Segments.Count; i++)
             {
                 Segment segment = Segments.GetInternalArray()[i];
@@ -90,14 +66,16 @@ namespace Equinox.EnergyWeapons.Components.Beam
                 var c = BeamColor(state.Color, state.OutputEma);
                 var width = BeamWidth(state.OutputEma);
 
+                // TODO stronger caching
                 if (segment.Path.Count > 0)
                 {
-                    Vector3D prev = segment.Path[0].Dummy.WorldMatrix.Translation;
+                    Vector3D prev = segment.Path[0].Dummy.WorldPosition;
                     bool prevView = MyAPIGateway.Session.Camera.IsInFrustum(ref prev);
                     for (var j = 1; j < segment.Path.Count; j++)
                     {
-                        var curr = segment.Path[j].Dummy.WorldMatrix.Translation;
+                        var curr = segment.Path[j].Dummy.WorldPosition;
                         var currView = MyAPIGateway.Session.Camera.IsInFrustum(ref curr);
+                        // todo custom quad billboard with control over thickness at both ends
                         if (prevView || currView)
                             MySimpleObjectDraw.DrawLine(prev, curr, LaserMaterial, ref c, width);
                         prev = curr;
@@ -119,8 +97,8 @@ namespace Equinox.EnergyWeapons.Components.Beam
                         preferredSegment = tci < fci ? conn.To.Segment : conn.From.Segment;
                     if (segment == preferredSegment)
                     {
-                        var a = conn.From.Dummy.WorldMatrix.Translation;
-                        var b = conn.To.Dummy.WorldMatrix.Translation;
+                        var a = conn.From.Dummy.WorldPosition;
+                        var b = conn.To.Dummy.WorldPosition;
                         if (MyAPIGateway.Session.Camera.IsInFrustum(ref a) ||
                             MyAPIGateway.Session.Camera.IsInFrustum(ref b))
                             MySimpleObjectDraw.DrawLine(a, b, LaserMaterial, ref c, width);

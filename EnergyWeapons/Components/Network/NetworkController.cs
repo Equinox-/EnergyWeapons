@@ -16,7 +16,7 @@ using VRageMath;
 namespace Equinox.EnergyWeapons.Components.Network
 {
     public abstract class NetworkController<TSegmentType, TConnData> : MyEntityComponentBase, IRenderableComponent
-        where TConnData : IConnectionData where TSegmentType:Segment<TSegmentType, TConnData>
+        where TConnData : IConnectionData where TSegmentType : Segment<TSegmentType, TConnData>
     {
         public EnergyWeaponsCore Core { get; }
         public ILogging Logger { get; }
@@ -33,11 +33,13 @@ namespace Equinox.EnergyWeapons.Components.Network
         #region Per-Network Config
 
         // :/ consider redesign
-        public abstract TConnData DetectorConnectionData { get; }
+        public abstract TConnData DetectorConnectionData(bool bidirectional);
 
         public abstract TConnData DissolveableConnectionData { get; }
 
-        public abstract TSegmentType AllocateSegment(bool bidirectional, params DummyData<TSegmentType, TConnData>[] path);
+        public abstract TSegmentType AllocateSegment(bool bidirectional,
+            params DummyData<TSegmentType, TConnData>[] path);
+
         #endregion
 
         #region Network Storage
@@ -51,7 +53,7 @@ namespace Equinox.EnergyWeapons.Components.Network
         {
             created = false;
             var key = new DummyKey(entity, path);
-            DummyData< TSegmentType, TConnData > res;
+            DummyData<TSegmentType, TConnData> res;
             if (!_pathByDummy.TryGetValue(key, out res))
             {
                 res = new DummyData<TSegmentType, TConnData>(new DummyPathRef(entity, path.Split('/')));
@@ -64,9 +66,9 @@ namespace Equinox.EnergyWeapons.Components.Network
         }
 
         public void MakeLink(DummyData<TSegmentType, TConnData> from, DummyData<TSegmentType, TConnData> to,
-            bool bidirectional, TConnData data)
+            TConnData data)
         {
-            Segment<TSegmentType, TConnData>.MakeLink(from, to, bidirectional, data);
+            Segment<TSegmentType, TConnData>.MakeLink(from, to, data);
         }
 
         public void BreakLink(DummyData<TSegmentType, TConnData> from, DummyData<TSegmentType, TConnData> to)
@@ -87,16 +89,15 @@ namespace Equinox.EnergyWeapons.Components.Network
         }
 
 
-        public void Link(IMyEntity fromEntity, string fromPath, IMyEntity toEntity, string toPath, bool bidirectional,
-            TConnData data)
+        public void Link(IMyEntity fromEntity, string fromPath, IMyEntity toEntity, string toPath, TConnData data)
         {
             bool tmp;
 
             Logger.Debug(
-                $"Linking {fromEntity.ToStringSmart()}: {fromPath} with {toEntity.ToStringSmart()}:{toPath} ({bidirectional})");
+                $"Linking {fromEntity.ToStringSmart()}: {fromPath} with {toEntity.ToStringSmart()}:{toPath} ({data})");
             var from = GetOrCreate(fromEntity, fromPath, out tmp);
             var to = GetOrCreate(toEntity, toPath, out tmp);
-            MakeLink(from, to, bidirectional, data);
+            MakeLink(from, to, data);
         }
 
         public void Unlink(IMyEntity fromEntity, string fromPath, IMyEntity toEntity, string toPath)
@@ -121,6 +122,7 @@ namespace Equinox.EnergyWeapons.Components.Network
 
         private Task? _updateTask;
         private float _dtCapture;
+
         public void Update(ulong deltaTicks)
         {
             if (_updateTask.HasValue && !_updateTask.Value.IsComplete)
@@ -129,12 +131,18 @@ namespace Equinox.EnergyWeapons.Components.Network
             foreach (var k in Segments)
                 k.Commit(dt);
             _dtCapture = dt;
+
+            const int segmentSize = 32;
             _updateTask = MyAPIGateway.Parallel.ForNonBlocking(0, Segments.Count, (i) =>
             {
-                if (i >= Segments.Count)
-                    return;
-                Segments.GetInternalArray()[i]?.Predict(_dtCapture);
-            });
+                var ia = Segments.GetInternalArray();
+                for (var j = i; j < i + segmentSize; j++)
+                {
+                    if (j >= Math.Min(Segments.Count, ia.Length))
+                        return;
+                    ia[j]?.Predict(_dtCapture);
+                }
+            }, segmentSize);
         }
 
         public override void OnAddedToScene()
@@ -174,16 +182,14 @@ namespace Equinox.EnergyWeapons.Components.Network
             foreach (var segment in Segments)
             {
                 Logger.Info($"segment {segment.GetHashCode():X8}:");
-                var f = segment.Forwards ? "F" : "";
-                var r = segment.Backwards ? "R" : "";
                 Logger.Info(
-                    $"  Path ({segment.Path.Count} {f}{r}): {string.Join(", ", segment.Path.Select(x => x.Dummy))}");
+                    $"  Path ({segment.Path.Count}): {string.Join(", ", segment.Path.Select(x => x.Dummy))}");
                 if (segment.Connections.Count > 0)
                 {
                     Logger.Info(
                         $"  Connections ({segment.Connections.Count}): {string.Join(", ", segment.Connections.Select(x => (x.From.Segment != segment ? x.From : x.To).Segment.GetHashCode().ToString("X8")))}");
                     Logger.Info(
-                        $"  Connections (explicit): {string.Join(", ", segment.Connections.Select(x => x.From.Dummy + (x.Bidirectional ? " with " : " to ") + x.To.Dummy + " " + x.Data))}");
+                        $"  Connections (explicit): {string.Join(", ", segment.Connections.Select(x => x.From.Dummy + (x.Data.Bidirectional ? " with " : " to ") + x.To.Dummy + " " + x.Data))}");
                 }
             }
 
@@ -199,16 +205,15 @@ namespace Equinox.EnergyWeapons.Components.Network
                     continue;
                 var c = (Vector4) Utils.Misc.ColorExtensions.SeededColor(i);
                 for (var j = 1; j < segment.Path.Count; j++)
-                    DrawArrow(segment.Path[j - 1].Dummy.WorldMatrix.Translation,
-                        segment.Path[j].Dummy.WorldMatrix.Translation, c, c, segment.Forwards, segment.Backwards);
+                    DrawArrow(segment.Path[j - 1].Dummy.WorldPosition, segment.Path[j].Dummy.WorldPosition, c, c, true,
+                        true);
 
                 foreach (var conn in segment.Connections)
                     if (conn.From.Segment == segment)
                     {
-                        var c2 = (Vector4) Utils.Misc.ColorExtensions.SeededColor(
-                            Segments.IndexOf((TSegmentType) conn.To.Segment));
-                        DrawArrow(conn.From.Dummy.WorldMatrix.Translation, conn.To.Dummy.WorldMatrix.Translation,
-                            c, c2, true, conn.Bidirectional);
+                        var c2 = (Vector4) Utils.Misc.ColorExtensions.SeededColor(Segments.IndexOf(conn.To.Segment));
+                        DrawArrow(conn.From.Dummy.WorldPosition, conn.To.Dummy.WorldPosition, c, c2,
+                            true, conn.Data.Bidirectional);
                     }
             }
 
@@ -217,6 +222,7 @@ namespace Equinox.EnergyWeapons.Components.Network
 
 
         private static readonly MyStringId _laserMaterial = MyStringId.GetOrCompute("WeaponLaser");
+
         private static void DrawArrow(Vector3D from, Vector3D to, Vector4 fromColor, Vector4 toColor, bool forwards,
             bool backwards)
         {

@@ -8,8 +8,11 @@ using Equinox.Utils.Logging;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
 using Sandbox.Game.Entities;
+using Sandbox.ModAPI;
+using VRage;
 using VRage.Game;
 using VRage.Game.Components;
+using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.ObjectBuilders;
@@ -50,6 +53,9 @@ namespace Equinox.EnergyWeapons.Components
             CheckUpdate();
         }
 
+        private static readonly MyFixedPoint _addAmount = 50;
+        private static readonly MyFixedPoint _thresholdAmount = 25;
+
         public override void UpdateBeforeSimulation10()
         {
             var user = Entity as IMyGunBaseUser;
@@ -61,9 +67,9 @@ namespace Equinox.EnergyWeapons.Components
             {
                 foreach (var mag in _weaponAmmoMags)
                 {
-                    if (inv.GetItemAmount(mag.GetObjectId(), mag.Flags) > 0)
+                    if (inv.GetItemAmount(mag.GetObjectId(), mag.Flags) > _thresholdAmount)
                         continue;
-                    inv.AddItems(1, mag);
+                    inv.AddItems(_addAmount, mag);
                 }
             }
             else
@@ -74,7 +80,6 @@ namespace Equinox.EnergyWeapons.Components
                     if (amount > 0)
                         inv.RemoveItemsOfType(amount, mag.GetObjectId());
                 }
-
             }
         }
 

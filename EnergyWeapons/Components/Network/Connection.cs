@@ -8,12 +8,9 @@ namespace Equinox.EnergyWeapons.Components.Network
         public readonly DummyData<TSegmentType, TConnData> From;
         public readonly DummyData<TSegmentType, TConnData> To;
         public readonly TConnData Data;
-        public readonly bool Bidirectional;
 
-        public Connection(DummyData<TSegmentType, TConnData> from, DummyData<TSegmentType, TConnData> to,
-            bool bidirectional, TConnData data)
+        public Connection(DummyData<TSegmentType, TConnData> from, DummyData<TSegmentType, TConnData> to, TConnData data)
         {
-            Bidirectional = bidirectional;
             Data = data;
             From = from;
             To = to;

@@ -94,7 +94,7 @@ namespace Equinox.EnergyWeapons.Misc
                 info = new ExtraHitInfo()
                 {
                     Position = info.Position,
-                    HitEntity = ((IMyVoxelBase) info.HitEntity)?.RootVoxel ?? info.HitEntity,
+                    HitEntity = ((MyVoxelBase) info.HitEntity)?.RootVoxel ?? info.HitEntity,
                     Normal = info.Normal,
                     Fraction = (float) ((info.Position - from).Dot(to - from) / (to - from).LengthSquared())
                 };

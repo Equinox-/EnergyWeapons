@@ -61,6 +61,7 @@ namespace Equinox.EnergyWeapons.Components.Network
                     tmp = new Dictionary<string, IMyModelDummy>();
                 if (ins.Entity.Model != null)
                 {
+                    tmp.Clear();
                     ins.Entity.Model.GetDummies(tmp);
                     IMyModelDummy dummy;
                     if (tmp.TryGetValue(ins.Path, out dummy))
@@ -92,9 +93,9 @@ namespace Equinox.EnergyWeapons.Components.Network
                     var forward = k.Input && data.Output;
                     var reverse = k.Output && data.Input;
                     if (forward)
-                        _network.Link(data.Entity, data.Path, k.Entity, k.Path, reverse, _network.DetectorConnectionData);
+                        _network.Link(data.Entity, data.Path, k.Entity, k.Path, _network.DetectorConnectionData(reverse));
                     else if (reverse)
-                        _network.Link(k.Entity, k.Path, data.Entity, data.Path, false, _network.DetectorConnectionData);
+                        _network.Link(k.Entity, k.Path, data.Entity, data.Path, _network.DetectorConnectionData(false));
                 }
         }
 

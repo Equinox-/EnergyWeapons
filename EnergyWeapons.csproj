@@ -145,6 +145,7 @@
     <Compile Include="EnergyWeapons\Definition\Weapon\LaserWeaponDefinition.cs" />
     <Compile Include="EnergyWeapons\EnergyWeaponsCore.cs" />
     <Compile Include="EnergyWeapons\LogLevels.cs" />
+    <Compile Include="EnergyWeapons\Scratch.cs" />
     <Compile Include="EnergyWeapons\Settings.cs" />
     <Compile Include="Utils\Components\ComponentSceneCallback.cs" />
     <Compile Include="Utils\Components\IDebugComponent.cs" />

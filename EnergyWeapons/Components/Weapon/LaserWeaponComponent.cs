@@ -33,6 +33,7 @@ using VRageMath;
 
 namespace Equinox.EnergyWeapons.Components.Weapon
 {
+    // TODO limit raycasts
     public class LaserWeaponComponent : WeaponComponent<LaserWeaponDefinition>, IRenderableComponent
     {
         private const float MaxVoxelRadius = 30;
@@ -620,7 +621,7 @@ namespace Equinox.EnergyWeapons.Components.Weapon
             var phys = _lazeBlockImpact != null
                 ? Core.Physics.PhysicsFor(_lazeBlockImpact)
                 : Core.Physics.PhysicsFor(_lazeImpact.HitEntity);
-            var voxel = _lazeImpact.HitEntity as IMyVoxelBase;
+            var voxel = _lazeImpact.HitEntity as MyVoxelBase;
             if (phys != null)
             {
                 phys.AddEnergy(_lazeAccumulatedEnergy);
