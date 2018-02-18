@@ -38,8 +38,8 @@ namespace Equinox.EnergyWeapons.Components.Beam
         public static float BeamWidth(float power)
         {
             // at half the max power the width is 70%
-            const float keyMaxPower = 1e6f; // 1 GW
-            const float keyMaxWidth = 1f; // 1 m
+            const float keyMaxPower = 1e5f; // 100 kW
+            const float keyMaxWidth = 0.25f; // 1 m
 
             var powerFrac = MathHelper.Clamp(power / keyMaxPower, 0f, keyMaxWidth * keyMaxWidth);
             return (float)Math.Sqrt(powerFrac);
@@ -47,7 +47,13 @@ namespace Equinox.EnergyWeapons.Components.Beam
 
         public static Vector4 BeamColor(Vector4 tint, float power)
         {
-            tint.W = 1;
+            const float keyMaxPower = 1e7f; // 10 GW
+            const float keyMaxMult = 1e2f;
+
+            var powerFrac = MathHelper.Clamp(power / keyMaxPower, 0f, 1f);
+            var key = (float) Math.Sqrt(powerFrac) * keyMaxMult;
+            tint.W = Math.Min(key, 1);
+            tint *= Math.Max(1, key);
             return tint;
         }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Components.Network;
+using Equinox.Utils.Misc;
 using VRageMath;
 
 namespace Equinox.EnergyWeapons.Components.Beam
@@ -76,7 +77,9 @@ namespace Equinox.EnergyWeapons.Components.Beam
             else if (con.To.Segment == this && !con.Data.Bidirectional)
                 dE = Math.Max(0, dE);
 
-            var dColor = dE * con.Data.Filter * (dE > 0 ? opponent.Current.Color : Current.Color);
+            var dColor = dE * (dE < 0 || con.Data.Filter.EqualsEps(Vector4.One)
+                             ? (dE > 0 ? opponent.Current.Color : Current.Color)
+                             : con.Data.Filter);
             _next += new BeamSegmentData(dE, dColor, Math.Max(-dE, 0), 0);
         }
 
@@ -97,7 +100,9 @@ namespace Equinox.EnergyWeapons.Components.Beam
             }
 
             var output = _next.Output / Math.Max(1e-6f, dt);
-            Current = new BeamSegmentData(_next.Energy, _next.WeightedColor, output, Current.OutputEma * 0.95f + output * 0.05f);
+            Current = new BeamSegmentData(_next.Energy,
+                Vector4.Clamp(_next.WeightedColor, Vector4.Zero, _next.Energy * Vector4.One), output,
+                Current.OutputEma * 0.95f + output * 0.05f);
 
             RaiseStateChanged();
         }

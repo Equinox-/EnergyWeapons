@@ -28,6 +28,7 @@ namespace Equinox.Utils.Misc
             _path = path;
         }
 
+        private bool _failed = true;
         private void Update()
         {
             _cachedModel = _entity.Model;
@@ -39,12 +40,15 @@ namespace Equinox.Utils.Misc
                     _cachedSubpart = part;
                 else
                 {
+                    EnergyWeaponsCore.LoggerStatic?.Warning($"Failed to process {string.Join("/", _path)} for {_entity}");
                     EnergyWeaponsCore.LoggerStatic?.Warning(
                         $"Couldn't find subpart {_path[i]} in {_cachedSubpart.Model?.AssetName}");
                     var tmp2 = new Dictionary<string, IMyModelDummy>();
                     _cachedSubpart.Model?.GetDummies(tmp2);
                     EnergyWeaponsCore.LoggerStatic?.Warning(
                         $"Existing dummies/subparts: {string.Join(", ", tmp2.Keys)}");
+                    _failed = true;
+                    return;
                 }
             }
 
@@ -54,15 +58,18 @@ namespace Equinox.Utils.Misc
             _cachedSubpartModel?.GetDummies(tmp);
             IMyModelDummy dummy;
             if (tmp.TryGetValue(_path[_path.Length - 1], out dummy))
-                _cachedDummyMatrix = dummy.Matrix;
-            else
             {
-                EnergyWeaponsCore.LoggerStatic?.Warning(
-                    $"Couldn't find dummy {_path[_path.Length - 1]} in {_cachedSubpart?.Model?.AssetName}");
-                EnergyWeaponsCore.LoggerStatic?.Warning(
-                    $"Existing dummies: {string.Join(", ", tmp.Keys)}");
+                _cachedDummyMatrix = dummy.Matrix;
+                _failed = false;
+                return;
             }
 
+            EnergyWeaponsCore.LoggerStatic?.Warning($"Failed to process {string.Join("/", _path)} for {_entity}");
+            EnergyWeaponsCore.LoggerStatic?.Warning(
+                $"Couldn't find dummy {_path[_path.Length - 1]} in {_cachedSubpart?.Model?.AssetName}");
+            EnergyWeaponsCore.LoggerStatic?.Warning(
+                $"Existing dummies: {string.Join(", ", tmp.Keys)}");
+            _failed = true;
         }
 
         private bool CheckUpdate()
@@ -72,7 +79,7 @@ namespace Equinox.Utils.Misc
             Update();
             return false;
         }
-
+        
         public Vector3D WorldPosition
         {
             get
@@ -97,7 +104,7 @@ namespace Equinox.Utils.Misc
             get
             {
                 CheckUpdate();
-                return _cachedSubpart != null && _cachedDummyMatrix.HasValue;
+                return _cachedSubpart != null && _cachedDummyMatrix.HasValue && !_failed;
             }
         }
 

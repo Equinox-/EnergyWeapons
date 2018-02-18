@@ -17,17 +17,20 @@ using DummyData =
 
 namespace Equinox.EnergyWeapons.Components.Beam
 {
-    public class NetworkComponent : MyEntityComponentBase, IDebugComponent, IRenderableComponent
+    public class NetworkComponent : ComponentSceneCallback, IDebugComponent, IRenderableComponent
     {
         public readonly EnergyWeaponsCore Core;
         public BeamController Controller { get; private set; }
+        public readonly ComponentDependency<AdvancedResourceSink> ResourceSink;
         private readonly ILogging _log;
 
         public NetworkComponent(EnergyWeaponsCore core)
         {
             Core = core;
             _log = core.Logger.CreateProxy(GetType());
+            ResourceSink = new ComponentDependency<AdvancedResourceSink>(this, (x) => new AdvancedResourceSink(core));
         }
+
 
         public override string ComponentTypeDebugString => nameof(NetworkComponent);
         private readonly List<DummyData> _dummies = new List<DummyData>();
@@ -70,7 +73,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
                         for (var i = 0; i < cPath.Dummies.Length - 1; i++)
                         {
                             Controller.Link(Entity, cPath.Dummies[i], Entity, cPath.Dummies[i + 1],
-                                new BeamConnectionData(Vector4.One, float.PositiveInfinity, cPath.Bidirectional));
+                                new BeamConnectionData(Vector4.One, float.PositiveInfinity, true));
                         }
                     }
 
@@ -116,9 +119,8 @@ namespace Equinox.EnergyWeapons.Components.Beam
             }
             catch (Exception e)
             {
-                EnergyWeaponsCore.LoggerStatic?.Error(e.ToString());
+                _log.Error(e.ToString());
                 Controller.DumpData();
-                EnergyWeaponsCore.LoggerStatic?.Flush();
             }
         }
 
@@ -140,9 +142,8 @@ namespace Equinox.EnergyWeapons.Components.Beam
             }
             catch (Exception e)
             {
-                EnergyWeaponsCore.LoggerStatic?.Error(e.ToString());
+                _log.Error(e.ToString());
                 Controller.DumpData();
-                EnergyWeaponsCore.LoggerStatic?.Flush();
             }
 
             _dummies.Clear();
@@ -151,14 +152,14 @@ namespace Equinox.EnergyWeapons.Components.Beam
 
         public override void OnBeforeRemovedFromContainer()
         {
-            if (Entity.InScene)
-                OnRemovedFromScene();
+            base.OnBeforeRemovedFromContainer();
+            ResourceSink.OnBeforeRemovedFromContainer();
         }
 
         public override void OnAddedToContainer()
         {
-            if (Entity.InScene)
-                OnAddedToScene();
+            base.OnAddedToContainer();
+            ResourceSink.OnAddedToContainer();
         }
 
         public void Draw()

@@ -13,11 +13,6 @@ namespace Equinox.EnergyWeapons.Definition.Beam
         /// </summary>
         public string[] Dummies { get; set; }
 
-        /// <summary>
-        /// Can a laser propogate both ways along this path
-        /// </summary>
-        public bool Bidirectional { get; set; }
-
         public override IEnumerable<string> Outputs
         {
             get
@@ -26,7 +21,7 @@ namespace Equinox.EnergyWeapons.Definition.Beam
                     yield break;
                 if (Dummies.Length > 1)
                     yield return Dummies[Dummies.Length - 1];
-                if (Dummies.Length > 0 && Bidirectional)
+                if (Dummies.Length > 0)
                     yield return Dummies[0];
             }
         }
@@ -39,7 +34,7 @@ namespace Equinox.EnergyWeapons.Definition.Beam
                     yield break;
                 if (Dummies.Length > 0)
                     yield return Dummies[0];
-                if (Dummies.Length > 1 && Bidirectional)
+                if (Dummies.Length > 1)
                     yield return Dummies[Dummies.Length - 1];
             }
         }

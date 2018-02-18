@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Equinox.EnergyWeapons.Misc;
 using Equinox.Utils.Logging;
 using Sandbox.ModAPI;
 using VRage.Game;
@@ -27,9 +28,14 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         }
 
         private DummyData _dummy;
+        private AdvancedResourceSink.SinkData _sink;
 
         public override void OnAddedToScene()
         {
+            _sink = Network.ResourceSink.Value.AllocateSink(ConstantDefs.ElectricityId);
+            _sink.MaxPower = Definition.MaxPowerOutput / 1e3f;
+            _sink.RequiredPowerFunc = () => DesiredEmitterPower / 1e3f;
+
             Block.IsWorkingChanged += StateChanged;
             var func = Block as IMyFunctionalBlock;
             if (func != null)
@@ -48,6 +54,8 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
                 func.EnabledChanged -= StateChanged;
 
             NeedsUpdate = false;
+            Network.ResourceSink.Value.FreeSink(_sink);
+            _sink = null;
         }
 
         #region Update Logic
@@ -85,9 +93,6 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         }
 
         #endregion
-
-        public static readonly MyDefinitionId ElectricityId =
-            new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Electricity");
 
         private const int UPDATE_INTERVAL = 10;
 
@@ -133,12 +138,8 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             get
             {
                 var desiredOutput = DesiredEmitterPower;
-                if (Block.ResourceSink != null)
-                {
-                    Block.ResourceSink.SetMaxRequiredInputByType(ElectricityId, desiredOutput / 1e3f); //kW to MW
-                    return Block.ResourceSink.CurrentInputByType(ElectricityId) * 1e3f;
-                }
-
+                if (_sink != null && Network.ResourceSink.Value.Attached)
+                    return _sink.CurrentPower * 1e3f;
                 return desiredOutput;
             }
         }
@@ -149,7 +150,8 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             base.Debug(sb);
             sb.Append("Power=").Append(EmitterPower.ToString("F0")).Append("/")
                 .Append(DesiredEmitterPower.ToString("F0")).Append("  ");
-            sb.Append("Segment=").Append((_dummy.Segment?.GetHashCode() ?? 0).ToString("X8"));
+            sb.Append("Segment=").Append((_dummy.Segment?.GetHashCode() ?? 0).ToString("X8")).Append(" ");
+            sb.Append("Sink=").Append(_sink.GetHashCode().ToString("X8"));
         }
 
         private void Update(ulong dticks)

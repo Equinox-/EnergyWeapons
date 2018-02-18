@@ -107,9 +107,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EnergyWeapons\Components\AdvancedResourceSink.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\BeamConnectionData.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\BeamController.cs" />
-    <Compile Include="EnergyWeapons\Components\Beam\BeamSegmentData.cs" />
     <Compile Include="EnergyWeapons\Components\Beam\Segment.cs" />
     <Compile Include="EnergyWeapons\Components\Network\Connection.cs" />
     <Compile Include="EnergyWeapons\Components\Network\IConnectionData.cs" />
@@ -130,8 +130,6 @@
     <Compile Include="EnergyWeapons\Components\Thermal\IThermalPhysicsProvider.cs" />
     <Compile Include="EnergyWeapons\Components\Thermal\ThermalPhysicsComponent.cs" />
     <Compile Include="EnergyWeapons\Components\Thermal\ThermalPhysicsSlim.cs" />
-    <Compile Include="EnergyWeapons\Components\Weapon\LaserWeaponComponent.cs" />
-    <Compile Include="EnergyWeapons\Components\Weapon\WeaponComponent.cs" />
     <Compile Include="EnergyWeapons\Definition\Beam\LossyComponent.cs" />
     <Compile Include="EnergyWeapons\Definition\DefinitionSet.cs" />
     <Compile Include="EnergyWeapons\Definition\Beam\Block.cs" />
@@ -145,11 +143,13 @@
     <Compile Include="EnergyWeapons\Definition\Weapon\LaserWeaponDefinition.cs" />
     <Compile Include="EnergyWeapons\EnergyWeaponsCore.cs" />
     <Compile Include="EnergyWeapons\LogLevels.cs" />
+    <Compile Include="EnergyWeapons\Misc\ConstantDefs.cs" />
     <Compile Include="EnergyWeapons\Scratch.cs" />
     <Compile Include="EnergyWeapons\Settings.cs" />
     <Compile Include="Utils\Components\ComponentSceneCallback.cs" />
     <Compile Include="Utils\Components\IDebugComponent.cs" />
     <Compile Include="Utils\Misc\CameraExtensions.cs" />
+    <Compile Include="Utils\Misc\DbvtExtensions.cs" />
     <Compile Include="Utils\Misc\CollectionExtensions.cs" />
     <Compile Include="Utils\Misc\ColorExtensions.cs" />
     <Compile Include="Utils\Misc\DummyPathRef.cs" />

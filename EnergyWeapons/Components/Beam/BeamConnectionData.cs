@@ -22,7 +22,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
             Bidirectional = bidirectional;
         }
 
-        public bool CanDissolve => float.IsPositiveInfinity(MaxThroughput) && Filter.EqualsEps(Vector4.One);
+        public bool CanDissolve => float.IsPositiveInfinity(MaxThroughput) && Filter.EqualsEps(Vector4.One) && Bidirectional;
 
         public override string ToString()
         {

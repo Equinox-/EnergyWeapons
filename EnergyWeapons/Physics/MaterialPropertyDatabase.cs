@@ -102,7 +102,7 @@ namespace Equinox.EnergyWeapons.Physics
                     combinedProps = combinedProps.Clone(default(MyDefinitionId), 1 / totalInputMass);
 
                     foreach (var r in kv.Results)
-                        _props.Add(r.Id, combinedProps.Clone(r.Id));
+                        _props[r.Id] = combinedProps.Clone(r.Id);
                     changed = true;
                 }
 
@@ -125,7 +125,7 @@ namespace Equinox.EnergyWeapons.Physics
                     combinedProps = combinedProps.Clone(default(MyDefinitionId), 1 / totalOutputMass);
 
                     foreach (var r in kv.Prerequisites)
-                        _props.Add(r.Id, combinedProps.Clone(r.Id));
+                        _props[r.Id] = combinedProps.Clone(r.Id);
                     changed = true;
                 }
             }

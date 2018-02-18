@@ -47,7 +47,7 @@ namespace Equinox.Utils.Logging
             _readyTicks = 0;
         }
 
-        public void Flush()
+        public override void Flush()
         {
             if (MyAPIGateway.Utilities != null)
                 MyAPIGateway.Parallel.StartBackground(() =>

@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using Equinox.EnergyWeapons.Components.Weapon;
-using Equinox.EnergyWeapons.Physics;
-using Sandbox.Game.Entities;
-using Sandbox.Game.GameSystems;
+﻿using Equinox.EnergyWeapons.Physics;
 using VRage.Game;
 using VRageMath;
 

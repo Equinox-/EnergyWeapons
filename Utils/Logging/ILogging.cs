@@ -24,6 +24,7 @@ namespace Equinox.Utils.Logging
         void LogRoot(MyLogSeverity severity, string prefix, string message);
         void LogRoot(MyLogSeverity severity, string prefix, string format, params object[] args);
         void LogRoot(MyLogSeverity severity, string prefix, StringBuilder message);
+        void Flush();
     }
 
     public static class LoggingExtension

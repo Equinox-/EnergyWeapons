@@ -15,6 +15,8 @@ namespace Equinox.Utils.Logging
 
         protected abstract void Write(StringBuilder message);
 
+        public abstract void Flush();
+
         public void IncreaseIndent()
         {
             lock (_messageBuilder)
@@ -44,6 +46,9 @@ namespace Equinox.Utils.Logging
                 Write(_messageBuilder);
                 _messageBuilder.Clear();
             }
+
+            if (severity >= MyLogSeverity.Error)
+                Flush();
         }
 
         public void LogRoot(MyLogSeverity severity, string prefix, string message)
@@ -57,6 +62,9 @@ namespace Equinox.Utils.Logging
                 Write(_messageBuilder);
                 _messageBuilder.Clear();
             }
+
+            if (severity >= MyLogSeverity.Error)
+                Flush();
         }
 
         public void LogRoot(MyLogSeverity severity, string prefix, StringBuilder message)
@@ -70,6 +78,9 @@ namespace Equinox.Utils.Logging
                 Write(_messageBuilder);
                 _messageBuilder.Clear();
             }
+
+            if (severity >= MyLogSeverity.Error)
+                Flush();
         }
 #endregion
 
