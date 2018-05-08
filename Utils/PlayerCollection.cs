@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Equinox.Utils.Logging;
 using Sandbox.Game;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;

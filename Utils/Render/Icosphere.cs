@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Logging;
 using Sandbox.ModAPI;
 using VRage.Game;
-using VRage.Game.Entity;
 using VRage.Utils;
 using VRageMath;
 
@@ -39,6 +39,32 @@ namespace Equinox.Utils.Render
 
             _indexBuffer = index;
             _vertexBuffer = points.ToArray();
+        }
+
+        private int[,] ComputeVertexToTris(int lod)
+        {
+            var data = new int[_vertexBuffer.Length, 6];
+            var ib = _indexBuffer[lod];
+            for (var i = 0; i < ib.Length; i += 3)
+            {
+                AddInlineList(data, ib[i], i);
+                AddInlineList(data, ib[i], i);
+                AddInlineList(data, ib[i], i);
+            }
+
+            return data;
+        }
+
+        private static void AddInlineList(int[,] list, int index, int val)
+        {
+            var capacity = list.GetLength(1);
+            var count = -list[index, capacity - 1];
+            if (count < 0)
+                throw new Exception("Failed to add to list.  Overflow");
+            list[index, count] = val;
+            count++;
+            if (count < capacity)
+                list[index, capacity - 1] = -count;
         }
 
         private static Vector2 WorldToScreen(Vector3D v)
@@ -180,7 +206,7 @@ namespace Equinox.Utils.Render
             }
 
             var after = vbuffer.Count;
-            EnergyWeapons.EnergyWeaponsCore.LoggerStatic?.Info($"LOD changed vcount from {before} to {after}");
+            EnergyWeaponsCore.LoggerStatic?.Info($"LOD changed vcount from {before} to {after}");
 
             return res;
         }

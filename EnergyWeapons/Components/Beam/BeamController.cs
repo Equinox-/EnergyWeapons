@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Components.Network;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Misc;
 using Sandbox.ModAPI;
 using VRage.Game;
@@ -28,9 +26,9 @@ namespace Equinox.EnergyWeapons.Components.Beam
 
         public override BeamConnectionData DissolveableConnectionData => new BeamConnectionData(Vector4.One);
 
-        public override Segment AllocateSegment(bool bidirectional, params DummyData<Segment, BeamConnectionData>[] path)
+        public override Segment AllocateSegment(params DummyData<Segment, BeamConnectionData>[] path)
         {
-            return new Segment(this, bidirectional, path);
+            return new Segment(this, path);
         }
 
         #region Render
@@ -42,7 +40,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
             const float keyMaxWidth = 0.25f; // 1 m
 
             var powerFrac = MathHelper.Clamp(power / keyMaxPower, 0f, keyMaxWidth * keyMaxWidth);
-            return (float)Math.Sqrt(powerFrac);
+            return (float) Math.Sqrt(powerFrac);
         }
 
         public static Vector4 BeamColor(Vector4 tint, float power)
@@ -52,7 +50,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
 
             var powerFrac = MathHelper.Clamp(power / keyMaxPower, 0f, 1f);
             var key = (float) Math.Sqrt(powerFrac) * keyMaxMult;
-            tint.W = Math.Min(key, 1);
+            tint.W = MathHelper.Clamp(key, 0, 1);
             tint *= Math.Max(1, key);
             return tint;
         }
@@ -66,11 +64,11 @@ namespace Equinox.EnergyWeapons.Components.Beam
                 Segment segment = Segments.GetInternalArray()[i];
                 if (segment == null)
                     continue;
-                var state = segment.Current;
-                if (state.Energy <= 0)
+                var state = segment.CurrentEma;
+                if (state.Output <= 0)
                     continue;
-                var c = BeamColor(state.Color, state.OutputEma);
-                var width = BeamWidth(state.OutputEma);
+                var c = BeamColor(state.OutputColor, state.Output);
+                var width = BeamWidth(state.Output);
 
                 // TODO stronger caching
                 if (segment.Path.Count > 0)

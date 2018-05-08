@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Equinox.EnergyWeapons.Physics;
+﻿using System.Collections.Generic;
 using VRageMath;
 
 namespace Equinox.EnergyWeapons.Definition.Beam
 {
-    public abstract class LossyComponent : Component
+    public abstract class Lossy : Component
     {
         /// <summary>
         /// Heat dissipation in KW/K.  If null compute from material properties and block dimensions.

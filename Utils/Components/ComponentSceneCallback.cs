@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VRage.Game.Components;
+﻿using VRage.Game.Components;
 
 namespace Equinox.Utils.Components
 {
@@ -13,6 +8,7 @@ namespace Equinox.Utils.Components
 
         public override void OnAddedToContainer()
         {
+            base.OnAddedToContainer();
             if (Entity.InScene)
                 OnAddedToScene();
         }
@@ -21,6 +17,7 @@ namespace Equinox.Utils.Components
         {
             if (Entity.InScene)
                 OnRemovedFromScene();
+            base.OnBeforeRemovedFromContainer();
         }
     }
 }

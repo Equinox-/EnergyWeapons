@@ -2,30 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Equinox.EnergyWeapons.Components.Beam;
 using Equinox.Utils.Components;
-using VRage.Collections;
-using VRageMath;
 
 namespace Equinox.EnergyWeapons.Components.Network
 {
     public abstract class Segment<TSegmentType, TConnData> : IDebugComponent where TConnData : IConnectionData
         where TSegmentType : Segment<TSegmentType, TConnData>
     {
-        [Flags]
-        private enum Direction
-        {
-            /// <summary>
-            /// Beam can travel from beginning to end, or self to other.
-            /// </summary>
-            FirstToLast = 0x1,
-
-            /// <summary>
-            /// Beam can travel from end to beginning, or other to self.
-            /// </summary>
-            LastToFirst = 0x2
-        }
-
         private readonly List<DummyData<TSegmentType, TConnData>> _path;
 
         private readonly List<Connection<TSegmentType, TConnData>> _connections =
@@ -33,12 +16,12 @@ namespace Equinox.EnergyWeapons.Components.Network
 
         private readonly NetworkController<TSegmentType, TConnData> _network;
 
+        protected event Action PathUpdated;
 
         public IReadOnlyList<Connection<TSegmentType, TConnData>> Connections => _connections;
         public IReadOnlyList<DummyData<TSegmentType, TConnData>> Path => _path;
 
-        public Segment(NetworkController<TSegmentType, TConnData> network, bool bidirectional,
-            params DummyData<TSegmentType, TConnData>[] path)
+        protected Segment(NetworkController<TSegmentType, TConnData> network, params DummyData<TSegmentType, TConnData>[] path)
         {
             _network = network;
             _network.Segments.Add((TSegmentType) this);
@@ -65,7 +48,7 @@ namespace Equinox.EnergyWeapons.Components.Network
             var from = _path[idx - 1];
             var to = _path[idx];
 
-            var ns = _network.AllocateSegment(true);
+            var ns = _network.AllocateSegment();
             for (var i = idx; i < _path.Count; i++)
             {
                 ns._path.Add(_path[i]);
@@ -86,6 +69,9 @@ namespace Equinox.EnergyWeapons.Components.Network
             var conn = new Connection<TSegmentType, TConnData>(from, to, _network.DissolveableConnectionData);
             _connections.Add(conn);
             ns._connections.Add(conn);
+
+            PathUpdated?.Invoke();
+            ns.PathUpdated?.Invoke();
         }
 
         public static void MakeLink(DummyData<TSegmentType, TConnData> from, DummyData<TSegmentType, TConnData> to,
@@ -153,6 +139,8 @@ namespace Equinox.EnergyWeapons.Components.Network
                     segmentToRemove._connections.Clear();
                 }
                 segmentToRemove._network.Segments.Remove(segmentToRemove);
+
+                segmentToGrow.PathUpdated?.Invoke();
             }
             else
             {
@@ -178,7 +166,7 @@ namespace Equinox.EnergyWeapons.Components.Network
         private void BreakAfter(int idx)
         {
             idx++;
-            var ns = _network.AllocateSegment(true);
+            var ns = _network.AllocateSegment();
             for (var i = idx; i < _path.Count; i++)
             {
                 ns._path.Add(_path[i]);
@@ -195,6 +183,7 @@ namespace Equinox.EnergyWeapons.Components.Network
             }
 
             _path.RemoveRange(idx, _path.Count - idx);
+            PathUpdated?.Invoke();
         }
 
         public static void BreakLink(DummyData<TSegmentType, TConnData> from, DummyData<TSegmentType, TConnData> to)
@@ -255,6 +244,7 @@ namespace Equinox.EnergyWeapons.Components.Network
             if (idx != 0 && idx != data.Segment._path.Count - 1)
                 data.Segment.BreakAfter(idx);
             data.Segment._path.Remove(data);
+            data.Segment.PathUpdated?.Invoke();
             data.Segment = null;
         }
 

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sandbox.Game.Entities;
-using Sandbox.Game.GameSystems;
-using Sandbox.ModAPI;
+﻿using Sandbox.Game.Entities;
 using VRageMath;
 
 namespace Equinox.EnergyWeapons.Physics

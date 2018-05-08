@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Equinox.EnergyWeapons.Components.Network;
+﻿using Equinox.EnergyWeapons.Components.Network;
+using Equinox.EnergyWeapons.Session;
+using Equinox.Utils.Logging;
 using Equinox.Utils.Misc;
 using VRageMath;
 

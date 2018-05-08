@@ -1,15 +1,17 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Logging;
+using ProtoBuf;
 using VRage.Game;
+using VRage.ObjectBuilders;
+using VRage.Serialization;
 
 namespace Equinox.EnergyWeapons.Definition.Beam
 {
-    public class Block : IEnumerable<Component>
+    public class Block
     {
         [XmlElement("Emitter", typeof(Emitter))]
         [XmlElement("Weapon", typeof(Weapon))]
@@ -17,16 +19,31 @@ namespace Equinox.EnergyWeapons.Definition.Beam
         [XmlElement("Optics", typeof(Optics))]
         public List<Component> Components { get; set; }
 
+        [XmlIgnore]
         public MyDefinitionId Id { get; set; }
 
-        public IEnumerator<Component> GetEnumerator()
+        [XmlAttribute("Type")]
+        [ProtoMember]
+        public string TypeName
         {
-            return Components.GetEnumerator();
+            get
+            {
+                return Id.TypeId.ToString();
+            }
+            set
+            {
+                if (value == null)
+                    return;
+                Id = new MyDefinitionId(MyObjectBuilderType.ParseBackwardsCompatible(value), Id.SubtypeId);
+            }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        [XmlAttribute("Subtype")]
+        [ProtoMember]
+        public string SubtypeName
         {
-            return GetEnumerator();
+            get { return Id.SubtypeName; }
+            set { Id = new MyDefinitionId(Id.TypeId, value); }
         }
 
         public void Add(Component comp)
@@ -36,6 +53,7 @@ namespace Equinox.EnergyWeapons.Definition.Beam
             Components.Add(comp);
         }
 
+        public bool RequiresResourceSink => Components.OfType<Emitter>().Any() || Components.OfType<Weapon>().Any();
 
         #region Integrity Check
 

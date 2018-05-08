@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using System.Xml.Serialization;
 using VRageMath;
 
 namespace Equinox.EnergyWeapons.Definition.Beam
@@ -11,8 +11,10 @@ namespace Equinox.EnergyWeapons.Definition.Beam
         /// Laser power is accepted along <see cref="Vector3.Forward"/> of the first entry,
         /// and emitted along <see cref="Vector3.Forward"/> of the last entry.
         /// </summary>
+        [XmlElement("Dummy", typeof(string))]
         public string[] Dummies { get; set; }
 
+        [XmlIgnore]
         public override IEnumerable<string> Outputs
         {
             get
@@ -26,6 +28,7 @@ namespace Equinox.EnergyWeapons.Definition.Beam
             }
         }
 
+        [XmlIgnore]
         public override IEnumerable<string> Inputs
         {
             get
@@ -39,6 +42,7 @@ namespace Equinox.EnergyWeapons.Definition.Beam
             }
         }
 
+        [XmlIgnore]
         public override IEnumerable<string> Internal
         {
             get

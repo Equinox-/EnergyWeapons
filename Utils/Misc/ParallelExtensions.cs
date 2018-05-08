@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using ParallelTasks;
 using VRage.Game.ModAPI;
-using VRage.Generics;
 
 namespace Equinox.Utils.Misc
 {

@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Equinox.EnergyWeapons.Misc;
+﻿using System.Text;
 using Equinox.EnergyWeapons.Physics;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Components;
-using VRage.Game.Components;
-using VRage.Game.ModAPI;
+using Equinox.Utils.Session;
+using Sandbox.ModAPI;
 using VRage.Game.ModAPI.Interfaces;
-using VRage.ModAPI;
 using VRage.Utils;
 
 namespace Equinox.EnergyWeapons.Components.Thermal
@@ -19,16 +14,12 @@ namespace Equinox.EnergyWeapons.Components.Thermal
         private const float TOLERANCE = 1e-5f;
         private static readonly MyStringHash _overheatingHash = MyStringHash.GetOrCompute("Overheating");
 
-
-        private readonly EnergyWeaponsCore _core;
-
+        
         public ThermalPhysicsSlim Physics { get; }
 
-        public ThermalPhysicsComponent(EnergyWeaponsCore core)
+        public ThermalPhysicsComponent()
         {
-            _core = core;
-            Physics = new ThermalPhysicsSlim(MaterialPropertyDatabase.IronMaterial, 1,
-                PhysicalConstants.TemperatureSpace);
+            Physics = new ThermalPhysicsSlim(MaterialPropertyDatabase.IronMaterial, 1, PhysicalConstants.TemperatureSpace);
             Physics.NeedsUpdateChanged += (old, @new) => NeedsUpdate = @new;
         }
 
@@ -51,15 +42,18 @@ namespace Equinox.EnergyWeapons.Components.Thermal
             var required = _needsUpdate && Entity != null && Entity.InScene;
 
             if (required && !_scheduled)
-                _core.Scheduler.RepeatingUpdate(UpdateAfterSimulation10, 10);
+                MyAPIGateway.Session.GetComponent<SchedulerAfter>().RepeatingUpdate(UpdateAfterSimulation10, 10);
             else if (_scheduled && !required)
-                _core.Scheduler.RemoveUpdate(UpdateAfterSimulation10);
+                MyAPIGateway.Session.GetComponent<SchedulerAfter>().RemoveUpdate(UpdateAfterSimulation10);
 
             _scheduled = required;
         }
 
+        private ThermalManager _thermal;
+
         public override void OnAddedToScene()
         {
+            _thermal = MyAPIGateway.Session.GetComponent<ThermalManager>();
             CheckProperties();
             CheckScheduled();
         }
@@ -73,9 +67,9 @@ namespace Equinox.EnergyWeapons.Components.Thermal
 
         private void CheckProperties()
         {
-            if (Entity == null || _core == null)
+            if (Entity == null || _thermal == null)
                 return;
-            Physics.Init(_core.Materials, Entity);
+            Physics.Init(_thermal.Materials, Entity);
         }
 
         private void UpdateAfterSimulation10(ulong ticks)

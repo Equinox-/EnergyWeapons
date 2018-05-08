@@ -1,66 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Sandbox.Game.Entities;
 using VRage.Game.Components;
-using VRage.ModAPI;
 
 namespace Equinox.Utils.Components
 {
     public class ComponentDependency<T> where T : MyEntityComponentBase
     {
         private readonly MyEntityComponentBase _owner;
-        private readonly Func<IMyEntity, object, T> _factory;
 
         public event Action<T, T> ValueChanged;
-
-        private readonly object _userData;
         private T _value;
 
-        public T Value
-        {
-            get
-            {
-                if (_value == null && _factory != null && _owner.Entity != null && _owner.Container != null)
-                {
-                    _value = _factory(_owner.Entity, _userData);
-                    if (_value != null)
-                    {
-                        _owner.Container.Add(typeof(T), _value);
-                        ValueChanged?.Invoke(null, _value);
-                    }
-                }
+        public T Value => _value;
 
-                return _value;
-            }
-        }
-
-        public ComponentDependency(MyEntityComponentBase owner, Func<IMyEntity, T> factory = null)
+        public ComponentDependency(MyEntityComponentBase owner)
         {
             _owner = owner;
-            if (factory != null)
-                _factory = (a, b) => factory(a);
-            else
-                _factory = null;
-            _userData = null;
         }
-
-        public static ComponentDependency<T> DependencyWithFactory<TU>(MyEntityComponentBase owner, TU userData,
-            Func<IMyEntity, TU, T> factory)
-        {
-            return new ComponentDependency<T>(owner, userData, (a, b) => factory(a, (TU) b));
-        }
-
-        private ComponentDependency(MyEntityComponentBase owner, object userData,
-            Func<IMyEntity, object, T> factory = null)
-        {
-            _owner = owner;
-            _factory = factory;
-            _userData = userData;
-        }
-
+        
         public void OnAddedToContainer()
         {
             if (_owner.Container == null)

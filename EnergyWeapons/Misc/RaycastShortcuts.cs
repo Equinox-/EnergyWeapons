@@ -1,25 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Equinox.Utils.Logging;
+﻿using System.Collections.Generic;
 using Equinox.Utils.Misc;
-using Sandbox.Engine.Physics;
-using Sandbox.Engine.Utils;
-using Sandbox.Engine.Voxels;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
-using Sandbox.ModAPI.Ingame;
 using VRage.Collections;
-using VRage.Game.Entity;
 using VRage.Game.ModAPI;
-using VRage.Generics;
 using VRage.ModAPI;
 using VRage.Utils;
-using VRage.Voxels;
 using VRageMath;
-using IMyStorage = VRage.ModAPI.IMyStorage;
 
 namespace Equinox.EnergyWeapons.Misc
 {
@@ -75,22 +62,29 @@ namespace Equinox.EnergyWeapons.Misc
         /// <param name="physics">Physics data</param>
         /// <param name="from">Ray start</param>
         /// <param name="to">Ray end</param>
+        /// <param name="ignoreVoxels">Ignore voxel entities</param>
         /// <param name="info">Hit result</param>
         /// <param name="any">Select any result</param>
         /// <param name="prefetch">Prefetch voxel physics if needed</param>
         /// <returns>true if a hit was returned</returns>
-        public static bool CastVoxelStorageRay(this IMyPhysics physics, Vector3D from, Vector3D to, out IHitInfo info,
-            bool any = false, bool prefetch = true)
+        public static bool CastVoxelStorageRay(this IMyPhysics physics, Vector3D from, Vector3D to,
+            bool ignoreVoxels, out IHitInfo info, bool any = false, bool prefetch = true)
         {
-            if (prefetch)
+            if (prefetch && !ignoreVoxels)
             {
                 var ray = new LineD(from, to);
                 PrefetchRay(ref ray);
             }
 
-            var hasHit = physics.CastRay(from, to, out info);
+            var hasHit = physics.CastRay(from, to, out info, ignoreVoxels ? 9 : 0);
             if (hasHit && info?.HitEntity is IMyVoxelBase)
             {
+                if (ignoreVoxels)
+                {
+                    info = null;
+                    return false;
+                }
+
                 info = new ExtraHitInfo()
                 {
                     Position = info.Position,
@@ -103,7 +97,92 @@ namespace Equinox.EnergyWeapons.Misc
             return hasHit;
         }
 
-        public static IMySlimBlock Block(this IHitInfo hit, Vector3 rayDirection)
+        public struct RaycastPrediction
+        {
+            private readonly IMyEntity _root;
+            private readonly IHitInfo _hit;
+            private readonly LineD _ray;
+            private readonly float _maxPrediction;
+            private IMySlimBlock _block;
+            private Vector3D _hitPosition;
+
+            public RaycastPrediction(IHitInfo hit, LineD ray, float maxPrediction)
+            {
+                _hit = hit;
+                _ray = ray;
+                _hitPosition = _hit.Position;
+                _maxPrediction = maxPrediction;
+
+                var root = hit?.HitEntity;
+                while (root?.Parent != null)
+                    root = root.Parent;
+                _root = root;
+
+                _block = null;
+                // ReSharper disable once ExpressionIsAlwaysNull
+                UpdateSlimBlock();
+            }
+
+            private void UpdateSlimBlock()
+            {
+                var grid = _root as IMyCubeGrid;
+                _block = grid?.FirstBlock(_hit.Position,
+                    _hit.Position + _maxPrediction * _ray.Direction);
+                if (_block == null)
+                    return;
+
+                Vector3 halfExtents;
+                _block.ComputeScaledHalfExtents(out halfExtents);
+                Vector3D center;
+                _block.ComputeScaledCenter(out center);
+                var bb = new BoundingBoxD(center - halfExtents, center + halfExtents);
+                LineD l;
+                var m = grid.WorldMatrixNormalizedInv;
+                l.From = Vector3D.Transform(_ray.From, ref m);
+                l.To = Vector3D.Transform(_ray.To, ref m);
+                l.Direction = Vector3D.TransformNormal(_ray.Direction, ref m);
+                l.Length = _ray.Length;
+                double t1, t2;
+                if (bb.Intersect(ref l, out t1, out t2))
+                    _hitPosition = _ray.From + _ray.Direction * t1;
+                else
+                    _hitPosition = _ray.From + (Vector3.Transform(center, grid.WorldMatrix) - _ray.From).Dot(_ray.Direction) * _ray.Direction;
+            }
+
+            private void CheckPrediction()
+            {
+                if (_block != null)
+                {
+                    if (_block.IsDestroyed)
+                        UpdateSlimBlock();
+                }
+            }
+
+            public IMySlimBlock Block
+            {
+                get
+                {
+                    CheckPrediction();
+                    return _block;
+                }
+            }
+
+            public Vector3D HitPosition
+            {
+                get
+                {
+                    CheckPrediction();
+                    return _hitPosition;
+                }
+            }
+
+            public Vector3D HitNormal => _hit.Normal;
+
+            public double Fraction => (HitPosition - _ray.From).Dot(_ray.Direction);
+            public IMyEntity Root => _root;
+        }
+
+        public static IMySlimBlock Block(this IHitInfo hit, Vector3 rayDirection, float maxPrediction = 10f)
         {
             if (hit == null)
                 return null;
@@ -117,7 +196,7 @@ namespace Equinox.EnergyWeapons.Misc
             var test = grid.GetCubeBlock(Vector3I.Round(local / grid.GridSize));
             if (test != null)
                 return test;
-            return grid.FirstBlock(hit.Position, hit.Position + grid.GridSize * 10 * rayDirection);
+            return grid.FirstBlock(hit.Position, hit.Position + maxPrediction * rayDirection);
         }
     }
 }

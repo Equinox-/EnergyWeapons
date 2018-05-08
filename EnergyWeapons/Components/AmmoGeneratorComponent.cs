@@ -1,33 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using Equinox.EnergyWeapons.Misc;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Logging;
-using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
+using Sandbox.Game;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage;
 using VRage.Game;
 using VRage.Game.Components;
-using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
-using VRage.ObjectBuilders;
+using VRageMath;
 
 namespace Equinox.EnergyWeapons.Components
 {
-    public class AmmoGeneratorComponent : MyGameLogicComponent, ICoreRefComponent
+    public class AmmoGeneratorComponent : MyGameLogicComponent
     {
-        public override string ComponentTypeDebugString
-        {
-            get { return nameof(AmmoGeneratorComponent); }
-        }
+        public override string ComponentTypeDebugString => nameof(AmmoGeneratorComponent);
 
-        private ILogging _logger;
-        private EnergyWeaponsCore _core;
         private MyWeaponDefinition _weapon;
         private MyObjectBuilder_PhysicalObject[] _weaponAmmoMags;
 
@@ -43,14 +34,7 @@ namespace Equinox.EnergyWeapons.Components
                         new MyObjectBuilder_AmmoMagazine() {SubtypeName = _weapon.AmmoMagazinesId[i].SubtypeName};
             }
 
-            CheckUpdate();
-        }
-
-        public void OnBeforeRemovedFromCore()
-        {
-            _core = null;
-            _logger = null;
-            CheckUpdate();
+            NeedsUpdate = MyEntityUpdateEnum.EACH_10TH_FRAME;
         }
 
         private static readonly MyFixedPoint _addAmount = 50;
@@ -81,24 +65,6 @@ namespace Equinox.EnergyWeapons.Components
                         inv.RemoveItemsOfType(amount, mag.GetObjectId());
                 }
             }
-        }
-
-        public void OnAddedToCore(EnergyWeaponsCore core)
-        {
-            if (Entity == null)
-                return;
-            _core = core;
-            _logger = core.Logger.CreateProxy(GetType());
-            CheckUpdate();
-        }
-
-        private void CheckUpdate()
-        {
-            var def = _core?.Definitions?.EnergyOf(Entity);
-            if (def == null || !def.GenerateAmmo)
-                NeedsUpdate = MyEntityUpdateEnum.NONE;
-            else
-                NeedsUpdate = MyEntityUpdateEnum.EACH_10TH_FRAME;
         }
     }
 }

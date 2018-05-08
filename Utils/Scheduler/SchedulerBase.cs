@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Logging;
-using Sandbox.Game.Entities.Character.Components;
+using Equinox.Utils.Session;
 using VRage;
 using VRage.Collections;
 
 namespace Equinox.Utils.Scheduler
 {
-    public class UpdateScheduler
+    public abstract class SchedulerBase : RegisteredSessionComponent
     {
         public delegate void DelUpdate(ulong deltaTicks);
+
+        protected SchedulerBase(Type depType) : base(depType)
+        {
+        }
 
         private long _ticks;
 
@@ -46,7 +48,8 @@ namespace Equinox.Utils.Scheduler
             }
         }
 
-        private readonly MyBinaryStructHeap<long, ScheduledUpdate> _scheduledUpdates = new MyBinaryStructHeap<long, ScheduledUpdate>();
+        private readonly MyBinaryStructHeap<long, ScheduledUpdate> _scheduledUpdates =
+            new MyBinaryStructHeap<long, ScheduledUpdate>();
 
         private readonly FastResourceLock _lock = new FastResourceLock();
         private readonly HashSet<DelUpdate> _updatesToRemove = new HashSet<DelUpdate>();
@@ -67,15 +70,16 @@ namespace Equinox.Utils.Scheduler
                 nextUpdate = (_ticks / (long) interval) * (long) interval + block;
             }
 
-            EnergyWeapons.EnergyWeaponsCore.LoggerStatic?.Info(
+            EnergyWeaponsCore.LoggerStatic?.Info(
                 $"Repeating {update.Method} on {update.Target} interval={interval}, delay={delay}");
             using (_lock.AcquireExclusiveUsing())
-                _updatesToAdd.Add(new ScheduledUpdate(update, nextUpdate - (long) interval, nextUpdate, (long) interval));
+                _updatesToAdd.Add(
+                    new ScheduledUpdate(update, nextUpdate - (long) interval, nextUpdate, (long) interval));
         }
 
         public void DelayedUpdate(DelUpdate update, ulong delay = 0)
         {
-            EnergyWeapons.EnergyWeaponsCore.LoggerStatic?.Info(
+            EnergyWeaponsCore.LoggerStatic?.Info(
                 $"Invoking {update.Method} on {update.Target} delay={delay}");
             using (_lock.AcquireExclusiveUsing())
                 _updatesToAdd.Add(new ScheduledUpdate(update, _ticks, _ticks + (long) delay));
@@ -83,7 +87,7 @@ namespace Equinox.Utils.Scheduler
 
         public void RemoveUpdate(DelUpdate update)
         {
-            EnergyWeapons.EnergyWeaponsCore.LoggerStatic?.Info($"Removing {update.Method} on {update.Target}");
+            EnergyWeaponsCore.LoggerStatic?.Info($"Removing {update.Method} on {update.Target}");
             using (_lock.AcquireExclusiveUsing())
                 _updatesToRemove.Add(update);
         }
@@ -101,7 +105,7 @@ namespace Equinox.Utils.Scheduler
             }
         }
 
-        public void RunUpdate(long ticks)
+        protected void RunUpdate(long ticks)
         {
             ApplyChanges();
             _ticks += ticks;
@@ -115,7 +119,8 @@ namespace Equinox.Utils.Scheduler
                 test.Callback((ulong) (_ticks - test.LastUpdate));
                 if (test.Interval > 0)
                 {
-                    var next = new ScheduledUpdate(test.Callback, _ticks, test.NextUpdate + test.Interval, test.Interval);
+                    var next = new ScheduledUpdate(test.Callback, _ticks, test.NextUpdate + test.Interval,
+                        test.Interval);
                     _scheduledUpdates.Insert(next, next.NextUpdate);
                 }
             } while (true);

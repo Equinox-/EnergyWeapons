@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Misc;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Components;
-using Sandbox.Definitions;
+using Equinox.Utils.Session;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Components;
-using VRage.Game.ModAPI;
-using VRage.Utils;
 
 namespace Equinox.EnergyWeapons.Components
 {
@@ -118,12 +115,12 @@ namespace Equinox.EnergyWeapons.Components
         
         public override void OnAddedToScene()
         {
-            _core.Scheduler.RepeatingUpdate(Update, UPDATE_RATE);
+            MyAPIGateway.Session.GetComponent<SchedulerAfter>().RepeatingUpdate(Update, UPDATE_RATE);
         }
 
         public override void OnRemovedFromScene()
         {
-            _core.Scheduler.RemoveUpdate(Update);
+            MyAPIGateway.Session.GetComponent<SchedulerAfter>().RemoveUpdate(Update);
         }
 
         private PerTypeData Type(MyDefinitionId id)

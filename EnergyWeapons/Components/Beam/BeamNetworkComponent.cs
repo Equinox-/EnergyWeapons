@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Components.Beam.Logic;
 using Equinox.EnergyWeapons.Definition.Beam;
-using Equinox.EnergyWeapons.Misc;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Components;
 using Equinox.Utils.Logging;
-using VRage.Game.Components;
+using Equinox.Utils.Misc;
 using VRage.Game.ModAPI;
 using VRageMath;
 using DummyData =
@@ -28,36 +27,64 @@ namespace Equinox.EnergyWeapons.Components.Beam
         {
             Core = core;
             _log = core.Logger.CreateProxy(GetType());
-            ResourceSink = new ComponentDependency<AdvancedResourceSink>(this, (x) => new AdvancedResourceSink(core));
+            ResourceSink = new ComponentDependency<AdvancedResourceSink>(this);
         }
-
 
         public override string ComponentTypeDebugString => nameof(NetworkComponent);
         private readonly List<DummyData> _dummies = new List<DummyData>();
         private readonly List<IComponent> _components = new List<IComponent>();
         private readonly List<IRenderableComponent> _renderable = new List<IRenderableComponent>();
 
+        private IMyCubeBlock Block => (IMyCubeBlock) Entity;
+
         public IReadOnlyList<DummyData> Dummies => _dummies;
 
         public override void OnAddedToScene()
         {
-            var grid = (Entity as IMyCubeBlock)?.CubeGrid;
-            if (grid == null)
+            if (!Entity.IsPhysicallyPresent())
+                return;
+            base.OnAddedToScene();
+            if (Block.IsWorking)
+                RegisterNetwork();
+            Block.IsWorkingChanged += IsWorkingChanged;
+        }
+
+        private void IsWorkingChanged(IMyCubeBlock myCubeBlock)
+        {
+            if (myCubeBlock.IsWorking)
+                RegisterNetwork();
+            else
+                UnregisterNetwork();
+        }
+
+        public override void OnRemovedFromScene()
+        {
+            base.OnRemovedFromScene();
+            Block.IsWorkingChanged -= IsWorkingChanged;
+            UnregisterNetwork();
+        }
+
+        private void RegisterNetwork()
+        {
+            if (Controller != null)
             {
-                _log.Warning("no grid");
+                _log.Warning("Already registered...");
                 return;
             }
 
-            Controller = grid.Components.Get<BeamController>();
+            Controller = (Entity as IMyCubeBlock)?.CubeGrid.Components.Get<BeamController>();
             if (Controller == null)
-                grid.Components.Add(Controller = new BeamController(Core));
+            {
+                _log.Warning("no grid controller");
+                return;
+            }
 
             _dummies.Clear();
             _components.Clear();
             try
             {
                 var def = Core.Definitions.BeamOf(Entity);
-                foreach (var c in def)
+                foreach (var c in def.Components)
                 {
                     foreach (var d in c.Inputs.Concat(c.Outputs).Concat(c.Internal))
                     {
@@ -73,7 +100,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
                         for (var i = 0; i < cPath.Dummies.Length - 1; i++)
                         {
                             Controller.Link(Entity, cPath.Dummies[i], Entity, cPath.Dummies[i + 1],
-                                new BeamConnectionData(Vector4.One, float.PositiveInfinity, true));
+                                new BeamConnectionData(Vector4.One));
                         }
                     }
 
@@ -92,7 +119,6 @@ namespace Equinox.EnergyWeapons.Components.Beam
                     if (cEmitter != null)
                     {
                         var k = new Logic.Emitter(this, cEmitter);
-                        k.OnAddedToScene();
                         _components.Add(k);
                     }
 
@@ -100,7 +126,6 @@ namespace Equinox.EnergyWeapons.Components.Beam
                     if (cWeapon != null)
                     {
                         var k = new Logic.Weapon(this, cWeapon);
-                        k.OnAddedToScene();
                         _components.Add(k);
                     }
                 }
@@ -114,8 +139,14 @@ namespace Equinox.EnergyWeapons.Components.Beam
                 foreach (var c in def.BidirectionalDetectors)
                     Controller.AddDetector(Entity, c, true, true);
 
+
+                foreach (var k in _components)
+                    k.OnAddedToScene();
+
                 _renderable.Clear();
                 _renderable.AddRange(_components.OfType<IRenderableComponent>());
+
+                this.RegisterRenderable();
             }
             catch (Exception e)
             {
@@ -124,7 +155,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
             }
         }
 
-        public override void OnRemovedFromScene()
+        private void UnregisterNetwork()
         {
             if (Controller == null)
                 return;
@@ -136,9 +167,10 @@ namespace Equinox.EnergyWeapons.Components.Beam
             try
             {
                 var def = Core.Definitions.BeamOf(Entity);
-                foreach (var c in def)
+                foreach (var c in def.Components)
                 foreach (var key in c.Inputs.Concat(c.Outputs).Concat(c.Internal))
                     Controller.Remove(Entity, key);
+                this.UnregisterRenderable();
             }
             catch (Exception e)
             {
@@ -148,6 +180,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
 
             _dummies.Clear();
             _renderable.Clear();
+            Controller = null;
         }
 
         public override void OnBeforeRemovedFromContainer()

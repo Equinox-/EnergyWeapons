@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Physics;
 using Equinox.Utils.Components;
 using Sandbox.Definitions;
@@ -276,6 +273,50 @@ namespace Equinox.EnergyWeapons.Components.Thermal
         }
 
         /// <summary>
+        /// Applies overheating mechanics
+        /// </summary>
+        /// <param name="energy"></param>
+        /// <param name="entity"></param>
+        public void ApplyOverheating(float energy, IMyDestroyableObject entity, bool removeEnergy,
+            MyStringHash? damageName = null)
+        {
+            var slim = entity as IMySlimBlock;
+            var massToDestroy = energy / Material.EnthalpyOfFusion;
+
+            var maxIntegrity = Math.Max(entity?.Integrity ?? 1, 1);
+
+            if (slim != null)
+                maxIntegrity = slim.MaxIntegrity;
+            else
+            {
+                MyEntityStat healthStat = null;
+                (entity as IMyEntity)?.Components.Get<MyEntityStatComponent>()
+                    ?.TryGetStat(MyCharacterStatComponent.HealthId, out healthStat);
+                var floating = entity as MyFloatingObject;
+                if (healthStat != null)
+                    maxIntegrity = healthStat.MaxValue;
+                else if (floating != null)
+                    maxIntegrity = MyDefinitionManager.Static.GetPhysicalItemDefinition(floating.Item.Content)
+                        .Health;
+            }
+
+            var integrityPerKg = maxIntegrity / Mass;
+
+            var damageToDo = Math.Min(integrityPerKg * massToDestroy, (entity?.Integrity + 0.1f) ?? 1.1f);
+
+            if (removeEnergy)
+            {
+                var massToDestroyReal = damageToDo / integrityPerKg;
+                AddEnergy(-massToDestroyReal * Material.EnthalpyOfFusion);
+            }
+
+            if ((slim?.CubeGrid != null && !slim.IsDestroyed && !slim.CubeGrid.Closed &&
+                 slim.CubeGrid.GetCubeBlock(slim.Position) == slim)
+                || !((entity as IMyEntity)?.Closed ?? true))
+                entity?.DoDamage(damageToDo, damageName ?? _overheatingHash, true);
+        }
+
+        /// <summary>
         /// Updates this thermal physics entity with a time delta
         /// </summary>
         /// <param name="entity">Entity to apply damage to</param>
@@ -304,37 +345,7 @@ namespace Equinox.EnergyWeapons.Components.Thermal
                 var temp = OverheatTemperature ?? Material.MeltingPoint;
                 var energy = (Temperature - temp) * Material.SpecificHeat * Mass;
                 if (energy > 0)
-                {
-                    var massToDestroy = energy / Material.EnthalpyOfFusion;
-
-                    var maxIntegrity = Math.Max(entity?.Integrity ?? 1, 1);
-
-                    if (slim != null)
-                        maxIntegrity = slim.MaxIntegrity;
-                    else
-                    {
-                        MyEntityStat healthStat = null;
-                        (entity as IMyEntity)?.Components.Get<MyEntityStatComponent>()
-                            ?.TryGetStat(MyCharacterStatComponent.HealthId, out healthStat);
-                        var floating = entity as MyFloatingObject;
-                        if (healthStat != null)
-                            maxIntegrity = healthStat.MaxValue;
-                        else if (floating != null)
-                            maxIntegrity = MyDefinitionManager.Static.GetPhysicalItemDefinition(floating.Item.Content)
-                                .Health;
-                    }
-
-                    var integrityPerKg = maxIntegrity / Mass;
-
-                    var damageToDo = Math.Min(integrityPerKg * massToDestroy, (entity?.Integrity + 0.1f) ?? 1.1f);
-                    var massToDestroyReal = damageToDo / integrityPerKg;
-                    AddEnergy(-massToDestroyReal * Material.EnthalpyOfFusion);
-
-                    if ((slim?.CubeGrid != null && !slim.IsDestroyed && !slim.CubeGrid.Closed &&
-                         slim.CubeGrid.GetCubeBlock(slim.Position) == slim)
-                        || !((entity as IMyEntity)?.Closed ?? true))
-                        entity?.DoDamage(damageToDo, _overheatingHash, true);
-                }
+                    ApplyOverheating(energy, entity, true);
             }
         }
 

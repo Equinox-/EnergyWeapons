@@ -1,5 +1,7 @@
 ﻿using System;
+using VRage.Game.Components;
 using VRage.Game.ModAPI;
+using VRage.Game;
 using VRageMath;
 
 namespace Equinox.Utils.Misc

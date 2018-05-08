@@ -1,18 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Misc;
-using Equinox.Utils.Logging;
+using Equinox.EnergyWeapons.Session;
+using Equinox.Utils.Session;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.ModAPI;
-using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
-
 using DummyData =
-    Equinox.EnergyWeapons.Components.Network.DummyData<Equinox.EnergyWeapons.Components.Beam.Segment, Equinox.EnergyWeapons.Components.Beam.BeamConnectionData>;
+    Equinox.EnergyWeapons.Components.Network.DummyData<Equinox.EnergyWeapons.Components.Beam.Segment,
+        Equinox.EnergyWeapons.Components.Beam.BeamConnectionData>;
 
 namespace Equinox.EnergyWeapons.Components.Beam.Logic
 {
@@ -79,9 +76,9 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             var required = _needsUpdate && Block != null && Block.InScene;
 
             if (required && !_scheduled)
-                Network.Core.Scheduler.RepeatingUpdate(Update, UPDATE_INTERVAL);
+                MyAPIGateway.Session.GetComponent<SchedulerAfter>().RepeatingUpdate(Update, UPDATE_INTERVAL);
             else if (_scheduled && !required)
-                Network.Core.Scheduler.RemoveUpdate(Update);
+                MyAPIGateway.Session.GetComponent<SchedulerAfter>().RemoveUpdate(Update);
 
             _scheduled = required;
         }
@@ -115,8 +112,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         {
             get
             {
-                var func = Block as IMyFunctionalBlock;
-                var on = Block.IsWorking && (func == null || func.Enabled);
+                var on = Block.IsWorking;
                 if (!on || IsOverheated)
                     return 0;
 
@@ -127,7 +123,8 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
                 var turnOffThreshold = maxPower * EmitterTargetSupply;
                 // desiredOutput is enough to hit target in the next update.
                 var desiredOutput = (turnOffThreshold - (_dummy.Segment?.Current.Energy ?? turnOffThreshold)) /
-                                    (Efficiency(Definition.Efficiency) * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS *
+                                    (Efficiency(Definition.Efficiency) *
+                                     MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS *
                                      UPDATE_INTERVAL);
                 return MathHelper.Clamp(desiredOutput, 0, maxPower);
             }

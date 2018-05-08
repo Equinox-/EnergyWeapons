@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Equinox.EnergyWeapons;
+﻿using System.Collections.Generic;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Logging;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -33,6 +29,8 @@ namespace Equinox.Utils.Misc
         {
             _cachedModel = _entity.Model;
             _cachedSubpart = _entity;
+            _cachedSubpartModel = _cachedSubpart?.Model;
+
             for (var i = 0; i < _path.Length - 1; i++)
             {
                 MyEntitySubpart part;

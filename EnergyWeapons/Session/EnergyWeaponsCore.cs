@@ -2,65 +2,52 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Equinox.EnergyWeapons.Components;
 using Equinox.EnergyWeapons.Components.Beam;
 using Equinox.EnergyWeapons.Components.Thermal;
 using Equinox.EnergyWeapons.Definition;
 using Equinox.EnergyWeapons.Definition.Beam;
-using Equinox.EnergyWeapons.Definition.Weapon;
 using Equinox.EnergyWeapons.Misc;
-using Equinox.EnergyWeapons.Physics;
-using Equinox.Utils;
 using Equinox.Utils.Components;
 using Equinox.Utils.Logging;
-using Equinox.Utils.Render;
-using Equinox.Utils.Scheduler;
-using Sandbox.Game.Entities;
+using Equinox.Utils.Session;
+using Sandbox.Game;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
-using VRage;
-using VRage.Collections;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
-using VRage.Generics;
 using VRage.Input;
 using VRage.ModAPI;
+using VRage.ObjectBuilders;
 using VRage.Utils;
 using VRageMath;
 
-namespace Equinox.EnergyWeapons
+namespace Equinox.EnergyWeapons.Session
 {
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
-    public class EnergyWeaponsCore : MySessionComponentBase
+    public class EnergyWeaponsCore : RegisteredSessionComponent
     {
         private const long MOD_MESSAGE_PING_MASTER_CHANNEL = 442403541L;
         private const long MOD_MESSAGE_PING_SLAVE_CHANNEL = MOD_MESSAGE_PING_MASTER_CHANNEL + 1;
         private const long MOD_MESSAGE_DEFINITION_CHANNEL = MOD_MESSAGE_PING_MASTER_CHANNEL + 2;
-
-        public CustomLogger Logger => LoggerStatic;
-
+        
         private static CustomLogger _loggerStatic;
-        
-        public static CustomLogger LoggerStatic => _loggerStatic ?? (_loggerStatic = new CustomLogger());
+        public CustomLogger Logger => _loggerStatic;
+        public static CustomLogger LoggerStatic => _loggerStatic;
 
-        private bool _master;
-        public EntityComponentRegistry ComponentRegistry { get; private set; }
-
+        public bool Master { get; private set; }
         public DefinitionManager Definitions { get; private set; }
-        public MaterialPropertyDatabase Materials { get; private set; }
-        public ThermalPhysicsController Physics { get; private set; }
-        public UpdateScheduler Scheduler { get; private set; }
 
-        private int _ticksUntilStartup;
-        
-        public override void Init(MyObjectBuilder_SessionComponent ob)
+        public EnergyWeaponsCore() : base(typeof(EnergyWeaponsCore))
         {
-            MyAPIGateway.Entities.OnEntityNameSet += OnEntityCreated;
-            _ticksUntilStartup = 5;
-            _master = DetermineIfMaster();
-            if (!_master)
+        }
+
+        public override void LoadData()
+        {
+            base.LoadData();
+            Master = DetermineIfMaster();
+            if (!Master)
             {
                 var set = new DefinitionSet();
                 EnergyWeapons.Definitions.Create(set);
@@ -71,54 +58,45 @@ namespace Equinox.EnergyWeapons
 
             MyAPIGateway.Utilities.RegisterMessageHandler(MOD_MESSAGE_PING_MASTER_CHANNEL, MasterPingHandler);
             MyAPIGateway.Utilities.RegisterMessageHandler(MOD_MESSAGE_DEFINITION_CHANNEL, MasterDefinitionHandler);
-            Scheduler = new UpdateScheduler();
+
+            _loggerStatic = new CustomLogger();
 
             Definitions = new DefinitionManager();
             {
                 var set = new DefinitionSet();
                 EnergyWeapons.Definitions.Create(set);
+                _loggerStatic.Info(MyAPIGateway.Utilities.SerializeToXML(set));
                 Definitions.Add(set);
             }
 
-            ComponentRegistry = new EntityComponentRegistry();
-            ComponentRegistry.Register<ICoreRefComponent>((x) => x.OnAddedToCore(this),
-                (x) => x.OnBeforeRemovedFromCore());
-            ComponentRegistry.RegisterWithList<IRenderableComponent>();
-            ComponentRegistry.RegisterComponentFactory(MakeAmmoGenerator);
-            ComponentRegistry.RegisterComponentFactory((x) =>
-            {
-                var def = Definitions.BeamOf(x);
-                if (def != null)
-                    return new NetworkComponent(this);
-                return null;
-            });
-            Materials = new MaterialPropertyDatabase();
-            Physics = new ThermalPhysicsController(this);
+            MyAPIGateway.Entities.OnEntityNameSet += CheckEntityComponents;
+            MyVisualScriptLogicProvider.ItemSpawned += ItemSpawned;
             Logger.Info($"Initialized");
+        }
+
+        protected override void UnloadData()
+        {
+            base.UnloadData();
+            if (!Master)
+                return;
+            MyAPIGateway.Utilities.UnregisterMessageHandler(MOD_MESSAGE_PING_MASTER_CHANNEL, MasterPingHandler);
+            MyAPIGateway.Utilities.UnregisterMessageHandler(MOD_MESSAGE_DEFINITION_CHANNEL, MasterDefinitionHandler);
+            // ReSharper disable once DelegateSubtraction
+            MyVisualScriptLogicProvider.ItemSpawned -= ItemSpawned;
+
+            Logger.Detach();
+            _loggerStatic = null;
+
+            MyAPIGateway.Entities.OnEntityNameSet -= CheckEntityComponents;
         }
 
         public override void UpdateAfterSimulation()
         {
-            if (!_master)
+            if (!Master)
                 return;
             Logger.UpdateAfterSimulation();
-            if (_ticksUntilStartup >= 0)
-            {
-                if (_ticksUntilStartup == 0)
-                {
-                    ComponentRegistry.Attach();
-                    Logger.Info("Attaching component system; no further factory registration");
-                }
-
-                _ticksUntilStartup--;
-                return;
-            }
-
             try
             {
-                Scheduler.RunUpdate(1);
-                Physics.Update();
-
                 if (!MyAPIGateway.Utilities.IsDedicated && MyAPIGateway.Input.IsNewKeyPressed(MyKeys.O))
                 {
                     var caster = MyAPIGateway.Session.LocalHumanPlayer?.Character?.EquippedTool?.Components
@@ -131,7 +109,7 @@ namespace Equinox.EnergyWeapons
                             _msg.Append("Block ").AppendLine(tm.CustomName);
                         else
                             _msg.Append("Slim ").AppendLine(block.Position.ToString());
-                        var phys = Physics.PhysicsFor(block, false);
+                        var phys = MyAPIGateway.Session.GetComponent<ThermalManager>().PhysicsFor(block, false);
                         if (phys != null && phys.DebugWithType(_msg))
                             _msg.AppendLine();
 
@@ -162,23 +140,67 @@ namespace Equinox.EnergyWeapons
         }
 
         private readonly StringBuilder _msg = new StringBuilder();
+        private readonly HashSet<MyDefinitionId> _generatedAmmos = new HashSet<MyDefinitionId>(MyDefinitionId.Comparer); 
 
-        private void OnEntityCreated(IMyEntity e, string arg2, string arg3)
+        private void CheckEntityComponents(IMyEntity e, string arg2, string arg3)
         {
-            var def = Definitions.BeamOf(e);
-            if (def != null && def.OfType<Emitter>().Any() && !e.Components.Has<MyResourceSinkComponent>())
+            if (e is IMyCubeGrid)
             {
-                var sink = new MyResourceSinkComponent();
-                sink.Init(MyStringHash.GetOrCompute("Defense"), new List<MyResourceSinkInfo>());
-                e.Components.Add(sink);
+                if (!e.Components.Has<BeamController>())
+                    e.Components.Add(new BeamController(this));
             }
+
+            var def = Definitions.BeamOf(e);
+            if (def != null)
+            {
+                if (def.RequiresResourceSink)
+                {
+                    if (!e.Components.Has<MyResourceSinkComponent>())
+                    {
+                        var sink = new MyResourceSinkComponent();
+                        sink.Init(MyStringHash.GetOrCompute("Defense"), new List<MyResourceSinkInfo>());
+                        e.Components.Add(sink);
+                    }
+
+                    if (!e.Components.Has<AdvancedResourceSink>())
+                    {
+                        var advSink = new AdvancedResourceSink(this);
+                        e.Components.Add(advSink);
+                    }
+                }
+
+                if (def.Components.OfType<Lossy>().Any())
+                    e.Components.Add(new ThermalPhysicsComponent());
+
+                if (def.Components.OfType<Weapon>().Any() && e is IMyUserControllableGun &&
+                    !e.Components.Has<AmmoGeneratorComponent>())
+                {
+                    var wepDep = WeaponShortcuts.GetWeaponDefinition(e);
+                    if (wepDep != null)
+                        foreach (var k in wepDep.AmmoMagazinesId)
+                            _generatedAmmos.Add(k);
+                    e.Components.Add(new AmmoGeneratorComponent());
+                }
+
+                if (!e.Components.Has<NetworkComponent>())
+                    e.Components.Add(new NetworkComponent(this));
+            }
+        }
+        
+        private void ItemSpawned(string itemtypename, string itemsubtypename, long itemid, int amount, Vector3D position)
+        {
+            MyObjectBuilderType type;
+            if (!MyObjectBuilderType.TryParse(itemtypename, out type))
+                return;
+            var id = new MyDefinitionId(type, itemsubtypename);
+            if (!_generatedAmmos.Contains(id))
+                return;
+            var ent = MyAPIGateway.Entities.GetEntityById(itemid);
+            ent?.Close();
         }
 
         private void MasterDefinitionHandler(object o1)
         {
-            if (_ticksUntilStartup <= 0)
-                MyLog.Default.Error($"Failed to register definitions, we've expired");
-
             var data = MyAPIGateway.Utilities.SerializeFromXML<DefinitionSet>((string) o1);
             Definitions.Add(data);
         }
@@ -199,48 +221,11 @@ namespace Equinox.EnergyWeapons
             return !hasMaster;
         }
         
-        private MyEntityComponentBase MakeAmmoGenerator(IMyEntity ent)
-        {
-            var def = Definitions.EnergyOf(ent);
-            if (def?.GenerateAmmo ?? false)
-            {
-                Logger.Info($"Creating {typeof(AmmoGeneratorComponent).Name} for {ent}");
-                return new AmmoGeneratorComponent();
-            }
-
-            return null;
-        }
-
         public override void SaveData()
         {
-            if (!_master)
+            if (!Master)
                 return;
             Logger.Flush();
-        }
-
-        protected override void UnloadData()
-        {
-            if (!_master)
-                return;
-            MyAPIGateway.Utilities.UnregisterMessageHandler(MOD_MESSAGE_PING_MASTER_CHANNEL, MasterPingHandler);
-            MyAPIGateway.Utilities.UnregisterMessageHandler(MOD_MESSAGE_DEFINITION_CHANNEL, MasterDefinitionHandler);
-            ComponentRegistry.Detach();
-            Logger.Detach();
-            _loggerStatic = null;
-        }
-
-        public override void Draw()
-        {
-            if (!_master)
-                return;
-            if (MyAPIGateway.Utilities.IsDedicated || ComponentRegistry == null)
-                return;
-            foreach (var render in ComponentRegistry.ComponentsOfType<IRenderableComponent>())
-            {
-                render.Draw();
-                if (MyAPIGateway.Input.IsKeyPress(MyKeys.OemOpenBrackets))
-                    render.DebugDraw();
-            }
         }
     }
 }

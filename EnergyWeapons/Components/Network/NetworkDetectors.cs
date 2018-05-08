@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Equinox.EnergyWeapons.Session;
 using Equinox.Utils.Logging;
 using VRage.Game;
 using VRage.Game.ModAPI;
