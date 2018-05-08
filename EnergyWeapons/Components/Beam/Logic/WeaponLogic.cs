@@ -16,6 +16,7 @@ using Sandbox.Game;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Weapons;
 using Sandbox.ModAPI;
+using Sandbox.ModAPI.Interfaces;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Interfaces;
@@ -30,8 +31,6 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 {
     public class Weapon : Lossy<Definition.Beam.Weapon>, IRenderableComponent
     {
-        private static readonly TimeSpan _shootDebounceTime = TimeSpan.FromMilliseconds(10);
-
         public Weapon(NetworkComponent block, Definition.Beam.Weapon definition) : base(block, definition)
         {
         }
@@ -41,6 +40,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         public override void OnAddedToScene()
         {
             base.OnAddedToScene();
+            _blockShootProperty = (Block as IMyTerminalBlock)?.GetProperty("Shoot").Cast<bool>();
             bool tmp;
             _dummy = Network.Controller.GetOrCreate(Block, Definition.Dummy, out tmp);
             _dummy.SegmentChanged += SegmentChanged;
@@ -132,13 +132,19 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         {
             get
             {
+                if (_capacitorEnergy <= 0)
+                    return false;
+
                 var gun = Block as IMyUserControllableGun;
                 if (gun != null && gun.IsShooting)
                     return true;
                 var gunBase = Block as IMyGunObject<MyGunBase>;
-                return gunBase?.GunBase != null &&
-                       (gunBase.IsShooting || (DateTime.UtcNow - gunBase.GunBase.LastShootTime) < _shootDebounceTime) &&
-                       _capacitorEnergy > 0;
+                if (gunBase != null && gunBase.IsShooting)
+                    return true;
+                // ReSharper disable once ConvertIfStatementToReturnStatement
+                if (_blockShootProperty != null && _blockShootProperty.GetValue(Block))
+                    return true;
+                return false;
             }
         }
 
@@ -401,7 +407,8 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             {
                 _fxImpactCount = Math.Max(_fxImpactCount - 1, 0);
                 if (fire)
-                    _fxImpactCount = Math.Min(_fxImpactCount + Definition.FxImpactBirthRate, Definition.FxImpactMaxCount);
+                    _fxImpactCount = Math.Min(_fxImpactCount + Definition.FxImpactBirthRate,
+                        Definition.FxImpactMaxCount);
                 if (_fxImpactCount > 0 && result.HasValue)
                 {
                     if (_fxImpactParticles == null)
@@ -443,7 +450,11 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         }
 
         private int _fxImpactCount;
+
         private MyParticleEffect _fxImpactParticles;
+
+        // because keen
+        private ITerminalProperty<bool> _blockShootProperty;
 
         private void DestroyFxObjects()
         {
