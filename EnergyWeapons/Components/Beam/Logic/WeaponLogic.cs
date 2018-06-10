@@ -128,23 +128,37 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 
         #endregion
 
+        private bool CalcUserTryingToShoot()
+        {
+            var gun = Block as IMyUserControllableGun;
+            if (gun != null && gun.IsShooting)
+                return true;
+            var gunBase = Block as IMyGunObject<MyGunBase>;
+            if (gunBase != null && gunBase.IsShooting)
+                return true;
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (_blockShootProperty != null && _blockShootProperty.GetValue(Block))
+                return true;
+            return false;
+        }
+
+        private bool _capacitorWasFiring;
+
         private bool IsShooting
         {
             get
             {
                 if (_capacitorEnergy <= 0 && (_dummy.Segment == null || _dummy.Segment.Current.Energy <= 0))
                     return false;
+                if (!CalcUserTryingToShoot())
+                    return false;
 
-                var gun = Block as IMyUserControllableGun;
-                if (gun != null && gun.IsShooting)
+                if (Math.Abs(Definition.CapacitorMaxCharge) < 1e-3f)
                     return true;
-                var gunBase = Block as IMyGunObject<MyGunBase>;
-                if (gunBase != null && gunBase.IsShooting)
-                    return true;
-                // ReSharper disable once ConvertIfStatementToReturnStatement
-                if (_blockShootProperty != null && _blockShootProperty.GetValue(Block))
-                    return true;
-                return false;
+                var rat = _capacitorEnergy / Definition.CapacitorMaxCharge;
+                if (rat > Definition.CapacitorMinRatioToFire)
+                    return _capacitorWasFiring = true;
+                return _capacitorWasFiring && (rat > Definition.CapacitorMinRatioToFireHysteresis);
             }
         }
 
