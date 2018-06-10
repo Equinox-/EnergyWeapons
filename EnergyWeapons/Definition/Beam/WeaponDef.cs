@@ -122,7 +122,8 @@ namespace Equinox.EnergyWeapons.Definition.Beam
 
         /// <summary>
         /// Once the weapon has begun firing with <see cref="CapacitorMinRatioToFire"/>
-        /// it can fire until the capacitor drops below this.
+        /// it can fire until the capacitor drops below this.  Should be more than twice
+        /// <see cref="CapacitorDischargePerTick"/>
         /// </summary>
         /// <remarks>
         /// Will not take affect if <see cref="CapacitorMaxCharge"/> is zero.
