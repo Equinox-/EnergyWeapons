@@ -65,7 +65,6 @@ namespace Equinox.EnergyWeapons.Session
             {
                 var set = new DefinitionSet();
                 EnergyWeapons.Definitions.Create(set);
-                _loggerStatic.Info(MyAPIGateway.Utilities.SerializeToXML(set));
                 Definitions.Add(set);
             }
 

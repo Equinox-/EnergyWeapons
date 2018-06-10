@@ -127,7 +127,7 @@ namespace Equinox.EnergyWeapons.Components.Beam
             var outputColor = _next.WeightedOutputColor / Math.Max(1e-6f, dt);
             Current = new BeamSegmentData(_next.Energy,
                 Vector4.Clamp(_next.WeightedColor, Vector4.Zero, _next.Energy * Vector4.One), output, outputColor);
-            CurrentEma = CurrentEma * 0.95f + Current * 0.05f;
+            CurrentEma = CurrentEma * 0.975f + Current * 0.025f;
 
             RaiseStateChanged();
         }

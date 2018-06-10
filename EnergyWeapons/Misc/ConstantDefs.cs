@@ -1,4 +1,5 @@
-﻿using VRage.Game;
+﻿using System;
+using VRage.Game;
 using VRage.Game.ObjectBuilders.Definitions;
 
 namespace Equinox.EnergyWeapons.Misc

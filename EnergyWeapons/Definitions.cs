@@ -63,14 +63,13 @@ namespace Equinox.EnergyWeapons
                         MaxLazeDistance = 1e4f,
                         CoolingPower = .1f,
                         Efficiency = 1f,
-                        WeaponDamageMultiplier = 1000f,
+                        WeaponDamageMultiplier = 100f,
                         FxImpactName = "WelderContactPoint",
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
                         Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
-                        VoxelDamageMultiplier = 0,
-                        DirectDamageFactor = 0.5f
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -93,7 +92,7 @@ namespace Equinox.EnergyWeapons
                     },
                     new Optics()
                     {
-                        IncomingBeams = new[] {"MissileTurretBase1/laser_a1", "beam_acceptor_01"},
+                        IncomingBeams = new[] {"MissileTurretBase1/laser_a1", "MissileTurretBase1/laser_a1.2"},
                         OutgoingBeams = new[]
                         {
                             new Optics.OutgoingBeam()
@@ -113,6 +112,14 @@ namespace Equinox.EnergyWeapons
                             "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
                         }
                     },
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "MissileTurretBase1/laser_a1.2"
+                        }
+                    },
                     new Weapon()
                     {
                         MaxLazeDistance = 1e4f,
@@ -123,7 +130,132 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_LargeMissileTurret), "MA_Gimbal_Laser_Armored_Slope2"),
+                Components = new List<Component>
+                {
+                    new Emitter()
+                    {
+                        ColorMin = new Vector4(.1f, 0, .1f, .1f),
+                        ColorMax = new Vector4(.3f, 0, .8f, 1f),
+                        MaxPowerOutput = .5e3f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        ThermalFuseMin = 1000,
+                        ThermalFuseMax = 1500,
+                        Dummy = "MissileTurretBase1/laser_a1",
+                    },
+                    new Optics()
+                    {
+                        IncomingBeams = new[] {"MissileTurretBase1/laser_a1", "MissileTurretBase1/laser_a1.2"},
+                        OutgoingBeams = new[]
+                        {
+                            new Optics.OutgoingBeam()
+                            {
+                                Color = Vector4.One,
+                                Dummy = "MissileTurretBase1/MissileTurretBarrels/laser_b2",
+                                MaxThroughput = float.PositiveInfinity
+                            }
+                        },
+                        IntersectionPoint = "MissileTurretBase1/laser_b1",
+                    },
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "MissileTurretBase1/MissileTurretBarrels/laser_b2",
+                            "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
+                        }
+                    },
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "MissileTurretBase1/laser_a1.2"
+                        }
+                    },
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_LargeMissileTurret), "MA_Gimbal_Laser_Armored_Slope45"),
+                Components = new List<Component>
+                {
+                    new Emitter()
+                    {
+                        ColorMin = new Vector4(.1f, 0, .1f, .1f),
+                        ColorMax = new Vector4(.3f, 0, .8f, 1f),
+                        MaxPowerOutput = .5e3f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        ThermalFuseMin = 1000,
+                        ThermalFuseMax = 1500,
+                        Dummy = "MissileTurretBase1/laser_a1",
+                    },
+                    new Optics()
+                    {
+                        IncomingBeams = new[] {"MissileTurretBase1/laser_a1", "MissileTurretBase1/laser_a1.2"},
+                        OutgoingBeams = new[]
+                        {
+                            new Optics.OutgoingBeam()
+                            {
+                                Color = Vector4.One,
+                                Dummy = "MissileTurretBase1/MissileTurretBarrels/laser_b2",
+                                MaxThroughput = float.PositiveInfinity
+                            }
+                        },
+                        IntersectionPoint = "MissileTurretBase1/laser_b1",
+                    },
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "MissileTurretBase1/MissileTurretBarrels/laser_b2",
+                            "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
+                        }
+                    },
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "MissileTurretBase1/laser_a1.2"
+                        }
+                    },
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -146,7 +278,7 @@ namespace Equinox.EnergyWeapons
                     },
                     new Optics()
                     {
-                        IncomingBeams = new[] {"MissileTurretBase1/laser_a1", "beam_acceptor_01"},
+                        IncomingBeams = new[] {"MissileTurretBase1/laser_a1", "MissileTurretBase1/laser_a1.2"},
                         OutgoingBeams = new[]
                         {
                             new Optics.OutgoingBeam()
@@ -166,6 +298,14 @@ namespace Equinox.EnergyWeapons
                             "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
                         }
                     },
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "MissileTurretBase1/laser_a1.2"
+                        }
+                    },
                     new Weapon()
                     {
                         MaxLazeDistance = 1e4f,
@@ -176,7 +316,8 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -229,7 +370,8 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -282,7 +424,118 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_LargeMissileTurret),
+                    "MA_Gimbal_Laser_Armored_Slope2_sb"),
+                Components = new List<Component>
+                {
+                    new Emitter()
+                    {
+                        ColorMin = new Vector4(.1f, 0, .1f, .1f),
+                        ColorMax = new Vector4(.3f, 0, .8f, 1f),
+                        MaxPowerOutput = .1e3f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        ThermalFuseMin = 1000,
+                        ThermalFuseMax = 1500,
+                        Dummy = "MissileTurretBase1/laser_a1",
+                    },
+                    new Optics()
+                    {
+                        IncomingBeams = new[] {"MissileTurretBase1/laser_a1", "beam_acceptor_01"},
+                        OutgoingBeams = new[]
+                        {
+                            new Optics.OutgoingBeam()
+                            {
+                                Color = Vector4.One,
+                                Dummy = "MissileTurretBase1/MissileTurretBarrels/laser_b2",
+                                MaxThroughput = float.PositiveInfinity
+                            }
+                        },
+                        IntersectionPoint = "MissileTurretBase1/laser_b1",
+                    },
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "MissileTurretBase1/MissileTurretBarrels/laser_b2",
+                            "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
+                        }
+                    },
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_LargeMissileTurret),
+                    "MA_Gimbal_Laser_Armored_Slope45_sb"),
+                Components = new List<Component>
+                {
+                    new Emitter()
+                    {
+                        ColorMin = new Vector4(.1f, 0, .1f, .1f),
+                        ColorMax = new Vector4(.3f, 0, .8f, 1f),
+                        MaxPowerOutput = .1e3f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        ThermalFuseMin = 1000,
+                        ThermalFuseMax = 1500,
+                        Dummy = "MissileTurretBase1/laser_a1",
+                    },
+                    new Optics()
+                    {
+                        IncomingBeams = new[] {"MissileTurretBase1/laser_a1", "beam_acceptor_01"},
+                        OutgoingBeams = new[]
+                        {
+                            new Optics.OutgoingBeam()
+                            {
+                                Color = Vector4.One,
+                                Dummy = "MissileTurretBase1/MissileTurretBarrels/laser_b2",
+                                MaxThroughput = float.PositiveInfinity
+                            }
+                        },
+                        IntersectionPoint = "MissileTurretBase1/laser_b1",
+                    },
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "MissileTurretBase1/MissileTurretBarrels/laser_b2",
+                            "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
+                        }
+                    },
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -335,10 +588,12 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001"
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
+
 
             set.Beams.Add(new Block()
             {
@@ -369,7 +624,7 @@ namespace Equinox.EnergyWeapons
                             new Optics.OutgoingBeam()
                             {
                                 Dummy = "beam_emitter_02",
-                                Color = new Vector4(0, 1, 0, 1)
+                                Color = new Vector4(1, 1, 1, 1)
                             }
                         }
                     },
@@ -399,17 +654,17 @@ namespace Equinox.EnergyWeapons
                             new Optics.OutgoingBeam()
                             {
                                 Dummy = "beam_emitter_03",
-                                Color = new Vector4(0, 1, 0, 1)
+                                Color = new Vector4(1, 1, 1, 1)
                             },
                             new Optics.OutgoingBeam()
                             {
                                 Dummy = "beam_emitter_04",
-                                Color = new Vector4(0, 1, 0, 1)
+                                Color = new Vector4(1, 1, 1, 1)
                             },
                             new Optics.OutgoingBeam()
                             {
                                 Dummy = "beam_emitter_05",
-                                Color = new Vector4(0, 1, 0, 1)
+                                Color = new Vector4(1, 1, 1, 1)
                             }
                         }
                     },
@@ -424,8 +679,8 @@ namespace Equinox.EnergyWeapons
                 {
                     new Emitter()
                     {
-                        ColorMin = new Vector4(1, 1, 1, 0.25f),
-                        ColorMax = new Vector4(1, 1, 1, 1),
+                        ColorMin = new Vector4(1, 0, 0, 0.25f),
+                        ColorMax = new Vector4(1, 0, 0, 1),
                         CoolingPower = 1f,
                         MaxPowerOutput = 5e3f / 4,
                         AutomaticTurnOff = true,
@@ -438,8 +693,8 @@ namespace Equinox.EnergyWeapons
                     },
                     new Emitter()
                     {
-                        ColorMin = new Vector4(1, 1, 1, 0.25f),
-                        ColorMax = new Vector4(1, 1, 1, 1),
+                        ColorMin = new Vector4(1, 0, 0, 0.25f),
+                        ColorMax = new Vector4(1, 0, 0, 1),
                         CoolingPower = 1f,
                         MaxPowerOutput = 5e3f / 4,
                         AutomaticTurnOff = true,
@@ -452,8 +707,8 @@ namespace Equinox.EnergyWeapons
                     },
                     new Emitter()
                     {
-                        ColorMin = new Vector4(1, 1, 1, 0.25f),
-                        ColorMax = new Vector4(1, 1, 1, 1),
+                        ColorMin = new Vector4(1, 0, 0, 0.25f),
+                        ColorMax = new Vector4(1, 0, 0, 1),
                         CoolingPower = 1f,
                         MaxPowerOutput = 5e3f / 4,
                         AutomaticTurnOff = true,
@@ -466,8 +721,8 @@ namespace Equinox.EnergyWeapons
                     },
                     new Emitter()
                     {
-                        ColorMin = new Vector4(1, 1, 1, 0.25f),
-                        ColorMax = new Vector4(1, 1, 1, 1),
+                        ColorMin = new Vector4(1, 0, 0, 0.25f),
+                        ColorMax = new Vector4(1, 0, 0, 1),
                         CoolingPower = 1f,
                         MaxPowerOutput = 5e3f / 4,
                         AutomaticTurnOff = true,
@@ -533,8 +788,8 @@ namespace Equinox.EnergyWeapons
                 {
                     new Emitter()
                     {
-                        ColorMin = new Vector4(1, 1, 1, 0.25f),
-                        ColorMax = new Vector4(1, 1, 1, 1),
+                        ColorMin = new Vector4(1, 0, 0, 0.25f),
+                        ColorMax = new Vector4(1, .3f, 0, 1),
                         CoolingPower = 1f,
                         MaxPowerOutput = 15e3f,
                         AutomaticTurnOff = true,
@@ -569,7 +824,8 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "muzzle_missile_001"
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -598,7 +854,8 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "muzzle_missile_001"
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -627,7 +884,8 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "muzzle_missile_001"
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -656,7 +914,8 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "muzzle_missile_001"
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -685,7 +944,8 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "muzzle_missile_001"
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });
@@ -714,7 +974,222 @@ namespace Equinox.EnergyWeapons
                         FxImpactBirthRate = 2,
                         FxImpactScale = 3f,
                         FxImpactMaxCount = 25,
-                        Dummy = "muzzle_missile_001"
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_SmallMissileLauncher), "MA_Fixed_sb_000"),
+                Components = new List<Component>
+                {
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "muzzle_missile_001"
+                        }
+                    },
+
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_SmallMissileLauncher), "MA_Fixed_sb_001"),
+                Components = new List<Component>
+                {
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "muzzle_missile_001"
+                        }
+                    },
+
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_SmallMissileLauncher), "MA_Fixed_sb_002"),
+                Components = new List<Component>
+                {
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "muzzle_missile_001"
+                        }
+                    },
+
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_SmallMissileLauncher), "MA_Fixed_sb_003"),
+                Components = new List<Component>
+                {
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "muzzle_missile_001"
+                        }
+                    },
+
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_SmallMissileLauncher), "MA_Fixed_sb_004"),
+                Components = new List<Component>
+                {
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "muzzle_missile_001"
+                        }
+                    },
+
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_SmallMissileLauncher), "MA_Fixed_sb_005"),
+                Components = new List<Component>
+                {
+                    new Path()
+                    {
+                        Dummies = new[]
+                        {
+                            "beam_acceptor_01",
+                            "muzzle_missile_001"
+                        }
+                    },
+
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
+                    }
+                }
+            });
+
+
+            set.Beams.Add(new Block
+            {
+                Id = new MyDefinitionId(typeof(MyObjectBuilder_LargeMissileTurret), "MA_PDX"),
+                Components = new List<Component>
+                {
+                    new Emitter()
+                    {
+                        ColorMin = new Vector4(.1f, 0, .1f, .1f),
+                        ColorMax = new Vector4(.3f, 0, .8f, 1f),
+                        MaxPowerOutput = .5e3f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        ThermalFuseMin = 1000,
+                        ThermalFuseMax = 1500,
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                    },
+
+                    new Weapon()
+                    {
+                        MaxLazeDistance = 1e4f,
+                        CoolingPower = .1f,
+                        Efficiency = 1f,
+                        WeaponDamageMultiplier = 100f,
+                        FxImpactName = "WelderContactPoint",
+                        FxImpactBirthRate = 2,
+                        FxImpactScale = 3f,
+                        FxImpactMaxCount = 25,
+                        Dummy = "MissileTurretBase1/MissileTurretBarrels/muzzle_missile_001",
+                        VoxelDamageMultiplier = 0
                     }
                 }
             });

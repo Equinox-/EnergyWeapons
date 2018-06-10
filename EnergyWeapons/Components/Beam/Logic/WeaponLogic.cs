@@ -132,7 +132,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         {
             get
             {
-                if (_capacitorEnergy <= 0)
+                if (_capacitorEnergy <= 0 && (_dummy.Segment == null || _dummy.Segment.Current.Energy <= 0))
                     return false;
 
                 var gun = Block as IMyUserControllableGun;
@@ -150,7 +150,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 
         private void UpdateDamage(ulong dticks)
         {
-            if (_pendingEnergyInSegment && _dummy.Segment != null)
+            if (_dummy.Segment != null && _dummy.Segment.Current.Energy > 0)
                 SegmentUpdated(_dummy.Segment);
 
             if (!IsShooting || !Block.IsWorking)
@@ -190,7 +190,6 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 
         private float _capacitorEnergy;
         private Vector4 _capacitorColor;
-        private bool _pendingEnergyInSegment;
 
         private void SegmentUpdated(Segment segment)
         {
@@ -198,12 +197,8 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             lock (this)
             {
                 if (!IsShooting && Definition.CapacitorMaxCharge <= 0)
-                {
-                    _pendingEnergyInSegment = e > 0;
                     return;
-                }
 
-                _pendingEnergyInSegment = false;
                 if (Definition.CapacitorMaxCharge > 0)
                     e = Math.Min(e, Definition.CapacitorMaxCharge - _capacitorEnergy);
                 if (e <= 0)
