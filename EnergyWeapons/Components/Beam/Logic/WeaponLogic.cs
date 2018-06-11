@@ -148,7 +148,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         {
             get
             {
-                if (_capacitorEnergy <= 0 && (_dummy.Segment == null || _dummy.Segment.Current.Energy <= 0))
+                if (_capacitorEnergy <= 0 && !_capacitorWaiting)
                     return false;
                 if (!CalcUserTryingToShoot())
                     return false;
@@ -164,9 +164,6 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 
         private void UpdateDamage(ulong dticks)
         {
-            if (_dummy.Segment != null && _dummy.Segment.Current.Energy > 0)
-                SegmentUpdated(_dummy.Segment);
-
             if (!IsShooting || !Block.IsWorking)
             {
                 _raycastResult = null;
@@ -174,7 +171,10 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
                 return;
             }
 
-            if (dticks == 0)
+            if (_capacitorWaiting)
+                SegmentUpdated(_dummy.Segment);
+
+            if (dticks == 0 || _capacitorEnergy <= 1e-3f)
                 return;
 
             var dt = dticks * MyEngineConstants.PHYSICS_STEP_SIZE_IN_SECONDS;
@@ -204,6 +204,7 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 
         private float _capacitorEnergy;
         private Vector4 _capacitorColor;
+        private bool _capacitorWaiting;
 
         private void SegmentUpdated(Segment segment)
         {
@@ -211,7 +212,12 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
             lock (this)
             {
                 if (!IsShooting && Definition.CapacitorMaxCharge <= 0)
+                {
+                    _capacitorWaiting = true;
                     return;
+                }
+
+                _capacitorWaiting = false;
 
                 if (Definition.CapacitorMaxCharge > 0)
                     e = Math.Min(e, Definition.CapacitorMaxCharge - _capacitorEnergy);

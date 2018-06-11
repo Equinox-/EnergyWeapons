@@ -4,6 +4,7 @@ using Equinox.EnergyWeapons.Definition.Beam;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Common.ObjectBuilders.Definitions;
 using VRage.Game;
+using VRage.Utils;
 using VRageMath;
 
 namespace Equinox.EnergyWeapons
