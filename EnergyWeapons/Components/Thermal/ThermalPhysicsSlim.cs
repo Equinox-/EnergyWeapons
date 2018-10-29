@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Equinox.EnergyWeapons.Physics;
+using Equinox.Utils;
 using Equinox.Utils.Components;
 using Sandbox.Definitions;
 using Sandbox.Game.Components;
@@ -310,6 +311,8 @@ namespace Equinox.EnergyWeapons.Components.Thermal
                 AddEnergy(-massToDestroyReal * Material.EnthalpyOfFusion);
             }
 
+            if (!MyAPIGateway.Session.IsServerDecider()) return;
+            
             if ((slim?.CubeGrid != null && !slim.IsDestroyed && !slim.CubeGrid.Closed &&
                  slim.CubeGrid.GetCubeBlock(slim.Position) == slim)
                 || !((entity as IMyEntity)?.Closed ?? true))

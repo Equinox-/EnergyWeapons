@@ -27,7 +27,7 @@ namespace Equinox.EnergyWeapons
                         Efficiency = 1f,
                         ThermalFuseMin = 1000,
                         ThermalFuseMax = 1500,
-                        Dummy = "MissileTurretBase1/laser_a1",
+                        Dummy = "MissileTurretBase1/laser_a1"
                     },
                     new Optics()
                     {

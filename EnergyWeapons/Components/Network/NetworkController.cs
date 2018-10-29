@@ -156,7 +156,7 @@ namespace Equinox.EnergyWeapons.Components.Network
             if (!Entity.IsPhysicallyPresent())
                 return;
             base.OnAddedToScene();
-            MyAPIGateway.Session.GetComponent<SchedulerAfter>().RepeatingUpdate(Update, 5);
+            MyAPIGateway.Session.GetComponent<SchedulerAfter>().RepeatingUpdate(Update, 2);
             this.RegisterRenderable();
         }
 

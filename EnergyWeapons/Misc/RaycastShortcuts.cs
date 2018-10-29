@@ -56,47 +56,6 @@ namespace Equinox.EnergyWeapons.Misc
             }
         }
 
-        /// <summary>
-        /// Casts a ray with some voxel related tweaks
-        /// </summary>
-        /// <param name="physics">Physics data</param>
-        /// <param name="from">Ray start</param>
-        /// <param name="to">Ray end</param>
-        /// <param name="ignoreVoxels">Ignore voxel entities</param>
-        /// <param name="info">Hit result</param>
-        /// <param name="any">Select any result</param>
-        /// <param name="prefetch">Prefetch voxel physics if needed</param>
-        /// <returns>true if a hit was returned</returns>
-        public static bool CastVoxelStorageRay(this IMyPhysics physics, Vector3D from, Vector3D to,
-            bool ignoreVoxels, out IHitInfo info, bool any = false, bool prefetch = true)
-        {
-            if (prefetch && !ignoreVoxels)
-            {
-                var ray = new LineD(from, to);
-                PrefetchRay(ref ray);
-            }
-
-            var hasHit = physics.CastRay(from, to, out info, ignoreVoxels ? 9 : 0);
-            if (hasHit && info?.HitEntity is IMyVoxelBase)
-            {
-                if (ignoreVoxels)
-                {
-                    info = null;
-                    return false;
-                }
-
-                info = new ExtraHitInfo()
-                {
-                    Position = info.Position,
-                    HitEntity = ((MyVoxelBase) info.HitEntity)?.RootVoxel ?? info.HitEntity,
-                    Normal = info.Normal,
-                    Fraction = (float) ((info.Position - from).Dot(to - from) / (to - from).LengthSquared())
-                };
-            }
-
-            return hasHit;
-        }
-
         public struct RaycastPrediction
         {
             private readonly IMyEntity _root;

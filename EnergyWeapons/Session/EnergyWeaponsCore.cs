@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -88,11 +89,18 @@ namespace Equinox.EnergyWeapons.Session
 
             MyAPIGateway.Entities.OnEntityNameSet -= CheckEntityComponents;
         }
+        
+        // Hack, ew
+        public readonly ConcurrentBag<LineD> VoxelPrefetchQueue = new ConcurrentBag<LineD>();
 
         public override void UpdateAfterSimulation()
         {
             if (!Master)
                 return;
+            LineD prefetch;
+            while (VoxelPrefetchQueue.TryTake(out prefetch))
+                RaycastShortcuts.PrefetchRay(ref prefetch);
+            
             Logger.UpdateAfterSimulation();
             try
             {

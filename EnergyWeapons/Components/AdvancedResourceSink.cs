@@ -16,6 +16,13 @@ namespace Equinox.EnergyWeapons.Components
     {
         private readonly ComponentDependency<MyResourceSinkComponent> _resourceSink;
 
+        private static float SafeFloat(float f)
+        {
+            if (float.IsNaN(f) || float.IsInfinity(f) || float.IsNegativeInfinity(f) || float.IsPositiveInfinity(f))
+                return 0;
+            return f;
+        }
+        
         public class SinkData
         {
             public readonly AdvancedResourceSink Sink;
@@ -73,7 +80,7 @@ namespace Equinox.EnergyWeapons.Components
             {
                 var v = 0f;
                 foreach (var l in Sinks)
-                    v += l.MaxPower;
+                    v += SafeFloat(l.MaxPower);
                 return v;
             }
 
@@ -91,7 +98,7 @@ namespace Equinox.EnergyWeapons.Components
                 {
                     if (l.RequiredPowerFunc != null)
                         l.RequiredPower = l.RequiredPowerFunc();
-                    v += l.RequiredPower;
+                    v += SafeFloat(l.RequiredPower);
                 }
 
                 return v;

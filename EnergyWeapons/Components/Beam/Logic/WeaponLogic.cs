@@ -233,7 +233,6 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
         #region Raycast
 
         private RaycastShortcuts.RaycastPrediction? _raycastResult;
-        private Task? _raycastTask;
 
         /// <summary>
         /// Energy throughput in kW
@@ -242,25 +241,47 @@ namespace Equinox.EnergyWeapons.Components.Beam.Logic
 
         private void CheckRaycast()
         {
-            if (_raycastTask?.IsComplete ?? true)
-                _raycastTask = MyAPIGateway.Parallel.Start(CastLazeWorker);
-        }
-
-        private void CastLazeWorker()
-        {
             if (!IsShooting || !Block.IsWorking)
                 return;
+
             var matrix = _dummy.Dummy.WorldMatrix;
             var origin = matrix.Translation;
             var dir = matrix.Forward;
 
             var from = origin;
             var to = from + dir * Definition.MaxLazeDistance;
-            IHitInfo hitInfo;
-            MyAPIGateway.Physics.CastVoxelStorageRay(from, to, Definition.VoxelDamageMultiplier <= 0, out hitInfo);
-            if (hitInfo != null)
-                _raycastResult =
-                    new RaycastShortcuts.RaycastPrediction(hitInfo, new LineD(from, to), Definition.RaycastPrediction);
+            var dispatch = new LineD(from, to);
+            _dispatchedRay = dispatch;
+            Network.Core.VoxelPrefetchQueue.Add(dispatch);
+            // ReSharper disable once ConvertClosureToMethodGroup
+            MyAPIGateway.Physics.CastRayParallel(ref from, ref to, 0, (data) => HandleRaycastOutput(data));
+        }
+
+        private LineD _dispatchedRay;
+
+        private void HandleRaycastOutput(IHitInfo info)
+        {
+            if (info?.HitEntity is IMyVoxelBase)
+            {
+                if (Definition.VoxelDamageMultiplier <= 0)
+                {
+                    info = null;
+                }
+                else
+                {
+                    info = new RaycastShortcuts.ExtraHitInfo()
+                    {
+                        Position = info.Position,
+                        HitEntity = ((MyVoxelBase) info.HitEntity)?.RootVoxel ?? info.HitEntity,
+                        Normal = info.Normal,
+                        Fraction = (float) ((info.Position - _dispatchedRay.From).Dot(_dispatchedRay.Direction) /
+                                            (_dispatchedRay.Length * _dispatchedRay.Length))
+                    };
+                }
+            }
+
+            if (info != null)
+                _raycastResult = new RaycastShortcuts.RaycastPrediction(info, _dispatchedRay, Definition.RaycastPrediction);
             else
                 _raycastResult = null;
         }
